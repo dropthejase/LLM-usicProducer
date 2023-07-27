@@ -161,3 +161,7 @@ cython_debug/
 
 # my stuff
 /archive
+/gpt2
+/lmd_cleaned2
+/tokens4
+/transXL
