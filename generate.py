@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 from tokenizer import MidiTokenizer, MidiTokenizer2, MidiTokenizer3, MidiTokenizer4
-from transformers import GPT2LMHeadModel, GPT2Config, GenerationConfig
+from transformers import GPT2LMHeadModel, GPT2Config, GenerationConfig, TransfoXLLMHeadModel
 
 class Prompt(Dataset):
     """Allows use of Dataloader to move input_ids to cuda"""
@@ -57,7 +57,8 @@ if __name__ == "__main__":
     # load model
     tokenizer = MidiTokenizer4()
 
-    model = torch.load('gpt2/gpt2-full-0.pth')
+    #model = torch.load('gpt2/gpt2-full-0.pth')
+    model = TransfoXLLMHeadModel.from_pretrained("transXL/checkpoint-160000")
     model.to(device)
     model.eval()
 
@@ -78,7 +79,8 @@ if __name__ == "__main__":
 
     #for name, param in model.named_parameters():
     #  print(name, param.size())
-    gen = generate_sample("tokens4/12.json", 512, print_new_events=True, out_dir='gpt2/gen-song16.mid', save_prompt_separately=True)
-    gen = generate_sample("tokens4/13.json", 512, print_new_events=True, out_dir='gpt2/gen-song20.mid', save_prompt_separately=True)
-    gen = generate_sample("tokens4/14.json", 512, print_new_events=True, out_dir='gpt2/gen-song24.mid', save_prompt_separately=True)
-    gen = generate_sample("gpt2/noprompt.json", 512, print_new_events=True, out_dir='gpt2/gen-noprompt.mid', save_prompt_separately=True)
+    #gen = generate_sample("gpt2/noprompt.json", 2, print_new_events=True, out_dir='transXL/gen-noprompt.mid', save_prompt_separately=True)
+    gen = generate_sample("tokens4/16.json", 1024, print_new_events=True, out_dir='transXL/gen-song16.mid', save_prompt_separately=True)
+    #gen = generate_sample("tokens4/24.json", 1024, print_new_events=True, out_dir='transXL/gen-song24.mid', save_prompt_separately=True)
+    #gen = generate_sample("tokens4/26.json", 1024, print_new_events=True, out_dir='transXL/gen-song26.mid', save_prompt_separately=True)
+    
