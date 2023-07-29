@@ -3,6 +3,8 @@ from pathlib import Path
 from tqdm import tqdm
 from typing import Union
 
+import torch
+
 from miditoolkit.midi import parser
 from miditoolkit.midi import containers as ct
 
@@ -211,6 +213,7 @@ class MidiTokenizer(MidiTokenizerBase):
         print("Notes not transcribed: ", error_rate)
         return res
     
+
 class MidiTokenizer2(MidiTokenizerBase):
     """
     ins-startpos-notedur-pitch
@@ -362,6 +365,7 @@ class MidiTokenizer2(MidiTokenizerBase):
         print("Notes not transcribed: ", error_rate)
         return res
 
+
 class MidiTokenizer3(MidiTokenizerBase):
     """
     bar-startpos-notedur-pitch-ins
@@ -503,6 +507,7 @@ class MidiTokenizer3(MidiTokenizerBase):
 
         print("Notes not transcribed: ", error_rate)
         return res
+
 
 class MidiTokenizer4(MidiTokenizerBase):
     """
@@ -654,26 +659,246 @@ class MidiTokenizer4(MidiTokenizerBase):
 
         print("Notes not transcribed: ", error_rate)
         return res
+
+
+class MidiTokenizerPooled(MidiTokenizerBase):
+    """
+    Uses embedding pooling
+    Token format (start_pos, note_dur, pitch, instrument)
+    """
+    def __init__(self):
+        super().__init__()
+        with open("encoding_pooled.json") as file:
+            self.vocab = json.load(file)
+
+    def __call__(self, filepath: Union[str,Path], out_dir: Union[str,Path]=None) -> dict:
+        """
+        tokenizes midifile
+        return dict comprising {"ids": list of ids, "events": list of events}
+        """
+
+        # check file exists
+        if not isinstance(filepath, Path):
+            filepath = Path(filepath)
+        if not filepath.exists() or filepath.suffix not in ['.mid']:
+            raise FileNotFoundError('Please provide filepath to the .mid file')
+
+        # create Midi parser
+        try:
+            midifile = parser.MidiFile(filepath)
+        except:
+            print("Skipped: ", filepath, " - failed to parse mid file")
+            return
+
+        if midifile.ticks_per_beat % 8 != 0:
+            print(f"Skipped (TPB = {midifile.ticks_per_beat}): ", filepath)
+            return
+
+        # quantize
+        midifile = self.quantize(midifile)
+
+        # parse MidiFile, create Note objects, and collate
+        notes_all = []
+        for ins in midifile.instruments:
+            for note in ins.notes:
+                note = Note(note, ins.name)
+                notes_all.append(note)
+
+        # sort all notes (in place) by start times
+        # this allows us to put BAR tokens properly
+        notes_all.sort(key=lambda x: x.start)
+
+        # tokenize
+        res = {"ids": [], "events": []}
+        tpb = midifile.ticks_per_beat
+
+        # BOS
+        res["ids"].append((self.vocab["start_pos"]["BOS_None"],
+                        self.vocab["note_dur"]["BOS_None"],
+                        self.vocab["pitch"]["BOS_None"],
+                        self.vocab["instrument"]["BOS_None"]))
+        res["events"].append("<<BOS>>")
+
+        # Add first BAR
+        res["ids"].append((self.vocab["start_pos"]["BAR"],
+                        self.vocab["note_dur"]["BAR"],
+                        self.vocab["pitch"]["BAR"],
+                        self.vocab["instrument"]["BAR"]))
+        res["events"].append("|==BAR==|")
+
+        bar_count = 1
+
+        for note in notes_all:
+
+            # Add BAR if required
+            if note.start // (tpb * 4) >= bar_count:
+                res["ids"].append((self.vocab["start_pos"]["BAR"],
+                            self.vocab["note_dur"]["BAR"],
+                            self.vocab["pitch"]["BAR"],
+                            self.vocab["instrument"]["BAR"]))
+                res["events"].append("|==BAR==|")
+                bar_count += 1
+
+            # START_POS
+            start_pos = int((note.start % (tpb * 4)) / (tpb / 8))
+            start_pos_temp = start_pos
+            start_pos = self.vocab["start_pos"][f"start_pos{start_pos}"]
+
+            # NOTE_DURATION
+            note_dur = int(note.get_duration() / tpb / (1/8))
+            note_dur = self.vocab["note_dur"][f"note_dur{note_dur}"]
+
+            # PITCH
+            pitch = self.vocab["pitch"][f"pitch{note.pitch}"]
+
+            # INSTRUMENT
+            instrument = self.vocab["instrument"][note.instrument]
+
+            # COMBINE
+            res["ids"].append((start_pos,
+                            note_dur,
+                            pitch,
+                            instrument))
+            res["events"].append((f"start_pos{start_pos_temp}",
+                                f"note_dur{note_dur}",
+                                f"pitch{note.pitch}",
+                                note.instrument))
+
+        # EOS
+        res["ids"].append((self.vocab["start_pos"]["EOS_None"],
+                        self.vocab["note_dur"]["EOS_None"],
+                        self.vocab["pitch"]["EOS_None"],
+                        self.vocab["instrument"]["EOS_None"]))
+        res["events"].append("<<EOS>>")
+
+        # Save as json
+        if out_dir:
+            with open(out_dir, 'w') as output:
+                json.dump(res, output)
+
+        return res
+
+    def create_midi_from_tokens(self, tokens_list: Union[list[int],torch.Tensor], tpb: int=96) -> parser.MidiFile:
+        """
+        creates MidiFile from list of token ids
+        inputs:
+            tokens_list: must be a list or tensor of size T x 4
+        """
+
+        # set up final MidiFile
+        res = parser.MidiFile(ticks_per_beat=tpb)
+        res.instruments = [
+            ct.Instrument(program=0, is_drum=True, name="drums"),
+            ct.Instrument(program=38, is_drum=False, name="bass"),
+            ct.Instrument(program=0, is_drum=False, name="piano")
+        ]
+        res.time_signature_changes = [ct.TimeSignature(numerator=4, denominator=4, time=0)]
+
+        # build reverse vocab dict (ignores n_tokens key)
+        dict_rev = {token_fam: {str(v): k for k, v in self.vocab[token_fam].items()} for token_fam in list(self.vocab.keys())[1:]}
+
+        counter = 0
+        bar = -1
+        error_rate = 0
+        while counter < len(tokens_list):
+            tokens = tokens_list[counter] # (start_pos, note_dur, pitch, instrument)
+
+            # ['PAD_None','BOS_None','EOS_None','Mask_None']
+            # if one token appears in the above, they all should, otherwise skip
+            # either way, escape loop
+            if tokens[0] in [0, 1, 2, 3] or tokens[1] in [0, 1, 2, 3] or tokens[2] in [0, 1, 2, 3] or tokens[3] in [0, 1, 2, 3]:
+                if sum([token in [0, 1, 2, 3] for token in tokens]) != 4:
+                    print("Counter: ", counter, " Tokens List: ", tokens)
+                    error_rate += 1
+                counter += 1
+                continue
+
+            # BAR
+            # if one token appears in the above, they all should, otherwise skip
+            # either way, escape loop
+            if tokens[0] == 4 or tokens[1] == 4 or tokens[2] == 4 or tokens[3] == 4:
+                if sum([token == 4 for token in tokens]) != 4:
+                    print("Counter: ", counter, " Tokens List: ", tokens)
+                    error_rate += 1
+                else:
+                    bar += 1
+
+                counter += 1
+                continue
+
+            # create Note object
+            start = int(dict_rev["start_pos"][f"{tokens[0]}"][9:]) * (1/8) * tpb + (bar * tpb * 4)
+            end = start + (int(dict_rev["note_dur"][f"{tokens[1]}"][8:]) * (1/8) * tpb)
+            pitch = int(dict_rev["pitch"][f"{tokens[2]}"][5:])
+            note = ct.Note(start=int(start), end=int(end), pitch=pitch, velocity=100)
+
+            # assign to the right instrument
+            inst = {"drums": 0, "bass": 1, "piano": 2}
+            inst_idx = inst[dict_rev["instrument"][f"{tokens[3]}"]]
+            res.instruments[inst_idx].notes.append(note)
+
+            counter += 1
+
+        print("Notes not transcribed: ", error_rate)
+        return res
+
+    def tokens_to_events(self, tokens_list: Union[list[Union[tuple[int],list[int]]],torch.Tensor]) -> list[tuple[str]]:
+        """
+        takes list of token ids and returns events
+        inputs should be T x 4 - can be list of lists, list of tuples or tensor of size T x 4
+        """
+        # build reverse vocab dict
+        dict_rev = {token_fam: {str(v): k for k, v in self.vocab[token_fam].items()} for token_fam in list(self.vocab.keys())[1:]}
+
+        res = []
+        for tokens in tokens_list:
+            start_pos = dict_rev['start_pos'][f'{tokens[0]}']
+            note_dur = dict_rev['note_dur'][f'{tokens[1]}']
+            pitch = dict_rev['pitch'][f'{tokens[2]}']
+            instrument = dict_rev['instrument'][f'{tokens[3]}']
+
+            res.append((start_pos, note_dur, pitch, instrument))
+
+        return res
+
+
+def tokenize_dataset(tokenizer: MidiTokenizerBase, tokens_folder: Union[str,Path]):
+    """
+    Function to tokenize my dataset and LMD dataset
+    Inputs
+        tokens_folder: output directory for tokenized json files
+    """
+    if not isinstance(tokens_folder, Path):
+        tokens_folder = Path(tokens_folder)
+    if not tokens_folder.exists():
+        tokens_folder.mkdir()
     
-if __name__ == "__main__":
-
-    '''
-    tokenizer4 = MidiTokenizer4()
-    tokens_path = Path('tokens4')
-
+    tokenizer = tokenizer()
+    
     # tokenize my own dataset
     for i in Path('dataset').glob('*[0-9].mid'):
-            tokenizer4(i, tokens_path.joinpath(f'{i.stem}.json'))
+            tokenizer(i, tokens_folder.joinpath(f'{i.stem}.json'))
 
     # tokenize LMD
     lmd_path = Path('lmd_cleaned2')
     for i in tqdm(lmd_path.glob('*.mid')):
             try:
-                    tokenizer4(i, tokens_path.joinpath(f'{i.stem}.json'))
+                tokenizer(i, tokens_folder.joinpath(f'{i.stem}.json'))
             except Exception as e:
-                    print(f"Skipped: {i.stem} due to {e}")
-                    continue
+                print(f"Skipped: {i.stem} due to {e}")
+                continue
+    
+    print(f"Total Songs: {list(tokens_folder.glob('*.json')).__len__()}")
 
+if __name__ == "__main__":
+
+    tokenize_dataset(MidiTokenizerPooled, "tokens_pooled")
+
+    # test MidiTokenizerPooled
+    '''
+    tokenizer = MidiTokenizerPooled()
+    song0_tokenizer_tokens = tokenizer('song0.mid', Path('song0.json'))['ids']
+    tokenizer.create_midi_from_tokens(song0_tokenizer_tokens).dump("song0_regen_tok1.mid")
     '''
 
     # test
