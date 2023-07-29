@@ -90,17 +90,17 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
 if __name__ == "__main__":
     tokenizer = MidiTokenizerPooled()
 
-    # create Dataset
-    dataset = MIDIDataset(block_size=512, file_path='tokens_pooled', pad_token=0)
+    # load Dataset
+    dataset = MIDIDataset(load_path="dataset.pt")
     print("Dataset size: ", dataset.samples.size())
     
     # split data
-    train_dataset, eval_dataset = random_split(dataset, [0.8, 0.2])
+    train_dataset, eval_dataset = random_split(dataset, [0.9, 0.1])
 
     # create model
     model = MusicTransformer(
         n_tokens=tokenizer.vocab["n_tokens"],
-        emb_sizes=[64, 256, 256, 16],
+        emb_sizes=[64, 256, 512, 8],
         n_layers=12,
         n_heads=8,
         d_model=512,

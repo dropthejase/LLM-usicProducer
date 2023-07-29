@@ -197,13 +197,15 @@ class MusicTransformer(nn.Module):
             json.dump(config, file)
     
     @torch.no_grad()
-    def generate(self, prompt, temperature=1.0, num_bars=8,  max_steps=50, force_bar=False, sampling_fn="top_k", threshold=0.9, bar_token=4):
+    def generate(self, prompt, temperature=[1.2, 2, 0.9, 1.2], num_bars=8,  max_steps=50, force_bar=False, sampling_fn="top_k", threshold=[1, 0.9, 0.9, 0.9], bar_token=4):
         """
         Generates samples
             prompt: should be a LongTensor of size N x T x 4 (for each of the token families)
+            temperature: list of 4 floats corresponding to each of the token families in order start_pos, note_dur, pitch, instrument
             num_bars: number of bars to generate
             max_steps: max number of tokens (i.e. Notes) to be generated (in case model doesn't learn bars) and there's an inf loop. This is the 'absolute' stopper.
             force_bar: if any token has bar token, all of them will have it too; i.e. this "forces" a bar
+            threshold: list of 4 floats corresponding to each of the token families in order start_pos, note_dur, pitch, instrument
         """
 
         self.model.eval()
@@ -221,10 +223,10 @@ class MusicTransformer(nn.Module):
             logit_instrument = outputs[3][:, -1, :]
 
             # sample
-            sample_start_pos = self.sample(logit_start_pos, temperature=temperature, sampling_fn=sampling_fn, threshold=threshold)
-            sample_note_dur = self.sample(logit_note_dur, temperature=temperature, sampling_fn=sampling_fn, threshold=threshold)
-            sample_pitch = self.sample(logit_pitch, temperature=temperature, sampling_fn=sampling_fn, threshold=threshold)
-            sample_instrument = self.sample(logit_instrument, temperature=temperature, sampling_fn=sampling_fn, threshold=threshold)
+            sample_start_pos = self.sample(logit_start_pos, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])
+            sample_note_dur = self.sample(logit_note_dur, temperature=temperature[1], sampling_fn=sampling_fn, threshold=threshold[1])
+            sample_pitch = self.sample(logit_pitch, temperature=temperature[2], sampling_fn=sampling_fn, threshold=threshold[2])
+            sample_instrument = self.sample(logit_instrument, temperature=temperature[3], sampling_fn=sampling_fn, threshold=threshold[3])
 
             # add bars
             if (sample_start_pos == bar_token) or (sample_note_dur == bar_token) or (sample_pitch == bar_token) or (sample_instrument == bar_token):
@@ -242,7 +244,7 @@ class MusicTransformer(nn.Module):
                         continue
                     else:
                         bar_count += 1
-                        print("Created {bar_count - 1} bars")
+                        print(f"Created {bar_count - 1} bars")
 
             # concat 4 x 1D LongTensor -> (1, 1, 4)
             pred_ids = torch.concat([

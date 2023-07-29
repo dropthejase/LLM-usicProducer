@@ -6,8 +6,8 @@ from typing import Union
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from tokenizer import MidiTokenizer, MidiTokenizer2, MidiTokenizer3, MidiTokenizer4
-from transformers import GPT2LMHeadModel, GPT2Config, GenerationConfig, TransfoXLLMHeadModel
+from tokenizer import MidiTokenizerPooled
+from musictransformer import MusicTransformer
 
 class Prompt(Dataset):
     """Allows use of Dataloader to move input_ids to cuda"""
@@ -23,19 +23,27 @@ class Prompt(Dataset):
     def __getitem__(self, idx):
         return {"input_ids": self.data[idx]}
 
-def generate_sample(json_file: Union[str,Path], prompt_idx: int=500, print_new_events: bool=False, out_dir: Union[str,Path]=None, save_prompt_separately: bool=True) -> list[int]:
+def generate_sample(json_file: Union[str,Path],
+                    prompt_idx: int=500,
+                    print_new_events: bool=False,
+                    out_dir: Union[str,Path]=None,
+                    save_prompt_separately: bool=True,
+                    **kwargs) -> list[int]:
+    
+    
     with open(json_file) as jsonfile:
         testprompt = json.load(jsonfile)['ids']
     print("Length of original JSON file: ", len(testprompt))
 
-    prompt = Prompt(testprompt[:prompt_idx])
+    if prompt_idx > len(testprompt):
+        prompt_idx = len(testprompt)
+    prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, 4)
 
-    dataloader_test = DataLoader(prompt)
+    print("Prompt Size: ", prompt.size())
 
-    for i in dataloader_test:
-        gen = model.generate(i['input_ids'].to(model.device), generation_config=generation_config)
+    gen = model.generate(prompt, **kwargs)
 
-    gen = gen.reshape(-1).tolist()
+    gen = gen.reshape(-1, 4).tolist()
 
     if print_new_events:
         print("===========================NEW EVENTS================================")
@@ -55,32 +63,29 @@ if __name__ == "__main__":
     device = torch.device("cpu")
 
     # load model
-    tokenizer = MidiTokenizer4()
+    tokenizer = MidiTokenizerPooled()
 
     #model = torch.load('gpt2/gpt2-full-0.pth')
-    model = TransfoXLLMHeadModel.from_pretrained("transXL/checkpoint-160000")
+    model = torch.load("musictransformer/musictransformer-full-0.pth")
     model.to(device)
-    model.eval()
 
-    # generation
-    generation_config = GenerationConfig(
-        min_new_tokens=512,
-        max_length=2048,
-        temperature=0.9, # was 0.5
-        num_beams=1,
-        do_sample=True,
-        top_k=10,
-        top_p=0.95,
-        epsilon_cutoff=3e-4,
-        eta_cutoff=1e-3,
-        bos_token_id=tokenizer.vocab['BOS_None'],
-        pad_token_id=tokenizer.vocab['PAD_None'],
-    )
+    genconfig = {
+        "temperature": 0.9,
+        "num_bars": 8,
+        "max_steps": 512,
+        "force_bar": False,
+        "sampling_fn": "top_k",
+        "threshold": 0.9,
+        "bar_token": 4
+    }
+
+    gen = generate_sample("tokens_pooled/24.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
+    gen = generate_sample("musictransformer/noprompt.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-noprompt.mid", save_prompt_separately=True, **genconfig)
 
     #for name, param in model.named_parameters():
     #  print(name, param.size())
     #gen = generate_sample("gpt2/noprompt.json", 2, print_new_events=True, out_dir='transXL/gen-noprompt.mid', save_prompt_separately=True)
-    gen = generate_sample("tokens4/16.json", 1024, print_new_events=True, out_dir='transXL/gen-song16.mid', save_prompt_separately=True)
+    #gen = generate_sample("tokens4/16.json", 1024, print_new_events=True, out_dir='transXL/gen-song16.mid', save_prompt_separately=True)
     #gen = generate_sample("tokens4/24.json", 1024, print_new_events=True, out_dir='transXL/gen-song24.mid', save_prompt_separately=True)
     #gen = generate_sample("tokens4/26.json", 1024, print_new_events=True, out_dir='transXL/gen-song26.mid', save_prompt_separately=True)
     
