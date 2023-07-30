@@ -65,27 +65,23 @@ if __name__ == "__main__":
     # load model
     tokenizer = MidiTokenizerPooled()
 
-    #model = torch.load('gpt2/gpt2-full-0.pth')
-    model = torch.load("musictransformer/musictransformer-full-0.pth")
+    model = torch.load("musictransformer/musictransformer-full-2.pth")
     model.to(device)
 
     genconfig = {
-        "temperature": 0.9,
+        "temperature": [1.0, 1.0, 1.0, 1.0],
         "num_bars": 8,
         "max_steps": 512,
         "force_bar": False,
         "sampling_fn": "top_k",
-        "threshold": 0.9,
+        "threshold": [0.85, 0.85, 0.85, 0.85],
         "bar_token": 4
     }
 
-    gen = generate_sample("tokens_pooled/24.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
-    gen = generate_sample("musictransformer/noprompt.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-noprompt.mid", save_prompt_separately=True, **genconfig)
+    #generate_sample("tokens_pooled/0.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
+    #generate_sample("tokens_pooled/16.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
+    
+    for i in range(3):
+        generate_sample("noprompt.json", prompt_idx=512, print_new_events=True, out_dir=f"musictransformer/gen-noprompt{i}.mid", save_prompt_separately=False, **genconfig)
 
-    #for name, param in model.named_parameters():
-    #  print(name, param.size())
-    #gen = generate_sample("gpt2/noprompt.json", 2, print_new_events=True, out_dir='transXL/gen-noprompt.mid', save_prompt_separately=True)
-    #gen = generate_sample("tokens4/16.json", 1024, print_new_events=True, out_dir='transXL/gen-song16.mid', save_prompt_separately=True)
-    #gen = generate_sample("tokens4/24.json", 1024, print_new_events=True, out_dir='transXL/gen-song24.mid', save_prompt_separately=True)
-    #gen = generate_sample("tokens4/26.json", 1024, print_new_events=True, out_dir='transXL/gen-song26.mid', save_prompt_separately=True)
     

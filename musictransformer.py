@@ -197,7 +197,7 @@ class MusicTransformer(nn.Module):
             json.dump(config, file)
     
     @torch.no_grad()
-    def generate(self, prompt, temperature=[1.2, 2, 0.9, 1.2], num_bars=8,  max_steps=50, force_bar=False, sampling_fn="top_k", threshold=[1, 0.9, 0.9, 0.9], bar_token=4):
+    def generate(self, prompt, temperature=[1.2, 2.0, 0.9, 1.2], num_bars=8,  max_steps=50, force_bar=False, sampling_fn="top_k", threshold=[1.0, 0.9, 0.9, 0.9], bar_token=4):
         """
         Generates samples
             prompt: should be a LongTensor of size N x T x 4 (for each of the token families)
@@ -215,7 +215,7 @@ class MusicTransformer(nn.Module):
 
         while bar_count < num_bars and steps < max_steps:
             outputs = self.model(prompt)
-
+            
             # extract last logit for each token family -> 1D LongTensor
             logit_start_pos = outputs[0][:, -1, :]
             logit_note_dur = outputs[1][:, -1, :]
