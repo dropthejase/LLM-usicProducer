@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # load model
     tokenizer = MidiTokenizerPooled()
 
-    model = torch.load("musictransformer/musictransformer-full-2.pth")
+    model = torch.load("musictransformer/musictransformer-full-1.pth")
     model.to(device)
 
     genconfig = {

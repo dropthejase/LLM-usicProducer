@@ -91,7 +91,7 @@ if __name__ == "__main__":
     tokenizer = MidiTokenizerPooled()
 
     # load Dataset
-    dataset = MIDIDataset(load_path="dataset1024.pt")
+    dataset = MIDIDataset(load_path="dataset.pt")
     print("Dataset size: ", dataset.samples.size())
     
     # split data
@@ -100,7 +100,8 @@ if __name__ == "__main__":
     # create model
     model = MusicTransformer(
         n_tokens=tokenizer.vocab["n_tokens"],
-        emb_sizes=[128, 512, 512, 32],
+        emb_sizes=[512, 512, 512, 512], # [128, 512, 512, 32]
+        emb_pooling="sum"
         n_layers=12,
         n_heads=8,
         d_model=512,
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     device = torch.device("mps")
     model.to(device)
 
-    train(train_dataset, model, batch_size=8, num_epochs=3, lr=5e-4, filename="musictransformer", loggingsteps=20000)
+    train(train_dataset, model, batch_size=8, num_epochs=3, ,lr=5e-4, filename="musictransformer", loggingsteps=20000)
 
  
 

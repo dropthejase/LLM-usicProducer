@@ -39,12 +39,10 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:, :x.size(1), :]
         return self.dropout(x)
 
-
 class MusicTransformerWrapper(nn.Module):
     def __init__(self,
                  n_tokens: list[int],
                  emb_sizes: list[int],
-                 emb_pooling: str,
                  n_layers=12,
                  n_heads=8,
                  d_model=512,
@@ -52,7 +50,6 @@ class MusicTransformerWrapper(nn.Module):
         """
         n_tokens: encoding["n_tokens"] shows vocab size of each token family
         emb_sizes: size of embeddings for each token family in order of start_pos, note_dur, pitch, ins
-        emb_pooling: 'concat' or 'sum'
         n_layer: how many transformer blocks
         n_heads: how many attention heads
         """
@@ -61,12 +58,6 @@ class MusicTransformerWrapper(nn.Module):
         # params
         self.n_tokens = n_tokens
         self.emb_sizes = emb_sizes
-        
-        if emb_pooling != "concat" and emb_pooling != "sum":
-            raise ValueError("emb_pooling must be 'concat' or 'sum")
-        if emb_pooling == "sum" and len(set(emb_sizes)) != 1:
-            raise ValueError("if emb_pooling is 'sum', then emb_sizes must be same value")
-        self.emb_pooling = emb_pooling
 
         self.n_layers = n_layers
         self.n_heads = n_heads
@@ -82,12 +73,8 @@ class MusicTransformerWrapper(nn.Module):
         self.emb_instrument = nn.Embedding(self.n_tokens[3], self.emb_sizes[3])
 
         # project to d_model after concatenating in forward()
-        # N x T x sum(emb_sizes) or N x T x emb_size[0] -> N x T x d_model
-        if self.emb_pooling == "sum" and self.emb_sizes[0] == self.d_model:
-            self.in_linear = nn.Identity()
-        else:
-            self.in_linear = nn.Linear(np.sum(self.emb_sizes), self.d_model)
-        self.layer_norm = nn.LayerNorm(self.d_model)
+        # N x T x sum(emb_sizes) -> N x T x d_model
+        self.in_linear = nn.Linear(np.sum(self.emb_sizes), self.d_model)
 
         # positional encoding
         self.pos_encoding = PositionalEncoding(self.d_model, self.dropout)
@@ -121,22 +108,17 @@ class MusicTransformerWrapper(nn.Module):
         if show_sizes:
             print("Embeddings: ", emb_start_pos.size())
 
-        if self.emb_pooling == "concat":
-            embs = torch.cat([emb_start_pos,
-                            emb_note_dur,
-                            emb_pitch,
-                            emb_instrument], dim=-1)
-        else:
-            embs = torch.add(emb_start_pos, emb_note_dur)
-            embs = torch.add(embs, emb_pitch)
-            embs = torch.add(embs, emb_instrument)
+        # concat -> N x T x sum(embed_size)
+        embs = torch.cat([emb_start_pos,
+                          emb_note_dur,
+                          emb_pitch,
+                          emb_instrument], dim=-1)
 
         if show_sizes:
-            print("Pooled Embeddings: ", embs.size())
+            print("Concat Embeddings: ", embs.size())
 
         # project N x T x sum(emb_size) -> N x T x d_model
         embed_linear = self.in_linear(embs)
-        embed_linear = self.layer_norm(embed_linear)
 
         if show_sizes:
             print("Projected to N x T x d-Model: ", embs.size())
@@ -180,7 +162,6 @@ class MusicTransformer(nn.Module):
     def __init__(self,
                  n_tokens: list[int],
                  emb_sizes: list[int],
-                 emb_pooling: str="concat",
                  n_layers=12,
                  n_heads=8,
                  d_model=512,
@@ -191,7 +172,6 @@ class MusicTransformer(nn.Module):
         self.model = MusicTransformerWrapper(
                     n_tokens=n_tokens,
                     emb_sizes=emb_sizes,
-                    emb_pooling=emb_pooling,
                     n_layers=12,
                     n_heads=8,
                     d_model=512,
@@ -207,7 +187,6 @@ class MusicTransformer(nn.Module):
         config = {
             "n_tokens": self.model.n_tokens,
             "emb_sizes": self.model.emb_sizes,
-            "emb_pooling": self.emb_pooling,
             "n_layers": self.model.n_layers,
             "n_heads": self.model.n_heads,
             "d_model": self.model.d_model,
@@ -297,8 +276,7 @@ if __name__ == "__main__":
     
     tokenizer = MidiTokenizerPooled()
 
-    #model = MusicTransformer(tokenizer.vocab['n_tokens'], [64, 256, 256, 16], emb_pooling="concat", n_layers=6)
-    model = MusicTransformer(tokenizer.vocab['n_tokens'], [512, 512, 512, 512], emb_pooling="sum", n_layers=6)
+    model = MusicTransformer(tokenizer.vocab['n_tokens'], [64, 256, 256, 16], n_layers=6)
     print_trainable_parameters(model)
     
     out = model(test)
