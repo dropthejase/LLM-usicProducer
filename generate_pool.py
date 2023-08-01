@@ -14,6 +14,7 @@ def generate_sample(json_file: Union[str,Path],
                     print_new_events: bool=False,
                     out_dir: Union[str,Path]=None,
                     save_prompt_separately: bool=True,
+                    num_token_families: int=4,
                     **kwargs) -> list[int]:
     
     
@@ -23,14 +24,14 @@ def generate_sample(json_file: Union[str,Path],
 
     if prompt_idx > len(testprompt):
         prompt_idx = len(testprompt)
-    prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, 5)
+    prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, num_token_families)
 
     print("Prompt Size: ", prompt.size())
     print("Prompt from idx: ", prompt_idx)
 
     gen = model.generate(prompt, **kwargs)
 
-    gen = gen.reshape(-1, 5).tolist()
+    gen = gen.reshape(-1, num_token_families).tolist()
 
     if print_new_events:
         print("===========================NEW EVENTS================================")
@@ -50,14 +51,14 @@ if __name__ == "__main__":
     device = torch.device("cpu")
 
     # load model
-    tokenizer = MidiTokenizerPooled2()
+    tokenizer = MidiTokenizerPooled3()
 
-    model = torch.load("musictransformer/musictransformer-full-3.pth")
+    model = torch.load("musictransformer/musictransformer-full-7.pth")
     model.to(device)
 
  
     genconfig = {
-        "temperature": [1.0, 1.0, 1.0, 1.0],
+        "temperature": [0.9, 0.9, 0.9, 0.9],
         "num_bars": 8,
         "max_steps": 128,
         "sampling_fn": "top_k",
@@ -66,8 +67,15 @@ if __name__ == "__main__":
     }
 
     # note model misbehaves if prompt_idx is bigger than length of JSON as the last prompt is EOS. Do we need to pad?
-    generate_sample("tokens_pooled_withbars/0.json", prompt_idx=256, print_new_events=True, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
-    generate_sample("tokens_pooled_withbars/16.json", prompt_idx=256, print_new_events=True, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
+    
+    generate_sample("tokens_pooled_pitch_ins/0.json", prompt_idx=6, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
+    generate_sample("tokens_pooled_pitch_ins/16.json", prompt_idx=256, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
     
     for i in range(3):
-        generate_sample("noprompt_withbartokens.json", prompt_idx=2, print_new_events=True, out_dir=f"musictransformer/gen-noprompt{i}.mid", save_prompt_separately=False, **genconfig)
+        generate_sample("noprompt_pitch_ins.json",
+                        prompt_idx=2,
+                        print_new_events=True,
+                        num_token_families=4,
+                        out_dir=f"musictransformer/gen-noprompt{i}.mid",
+                        save_prompt_separately=False,
+                        **genconfig)

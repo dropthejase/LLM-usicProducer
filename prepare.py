@@ -69,6 +69,6 @@ class MIDIDataset(Dataset):
 if __name__ == "__main__":
 
   # create Dataset
-  dataset = MIDIDataset(block_size=512, file_path='tokens_pooled_withbars', pad_token=0)
+  dataset = MIDIDataset(block_size=512, file_path='tokens_pooled_pitch_ins', pad_token=0)
   print("Dataset size: ", dataset.samples.size())
-  dataset.save("dataset_bar512.pt")
+  dataset.save("dataset_pitch_ins512.pt")

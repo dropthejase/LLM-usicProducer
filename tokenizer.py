@@ -1045,7 +1045,7 @@ class MidiTokenizerPooled3(MidiTokenizerBase):
     bar-startpos-notedur-pitchins (pitch and ins are concat)
     """
     def __init__(self):
-        with open("encoding_pooled_withbartokens.json") as file: # TO DO
+        with open("encoding_pooled_pitch_ins.json") as file:
             self.vocab = json.load(file)
 
     def __call__(self, filepath: Union[str,Path], out_dir: Union[str,Path]=None) -> dict:
@@ -1168,7 +1168,7 @@ class MidiTokenizerPooled3(MidiTokenizerBase):
             # if one token appears in the above, they all should, otherwise skip
             # either way, escape loop
             if tokens[0] in [0, 1, 2, 3] or tokens[1] in [0, 1, 2, 3] or tokens[2] in [0, 1, 2, 3] or tokens[3] in [0, 1, 2, 3]:
-                if sum([token in [0, 1, 2, 3] for token in tokens]) != 5:
+                if sum([token in [0, 1, 2, 3] for token in tokens]) != 4:
                     print("Counter: ", counter, " Tokens List: ", tokens)
                     error_rate += 1
                 counter += 1
@@ -1178,12 +1178,12 @@ class MidiTokenizerPooled3(MidiTokenizerBase):
             bar = int(dict_rev["bar"][f"{tokens[0]}"][3:])
             start = int(dict_rev["start_pos"][f"{tokens[1]}"][9:]) * (1/8) * tpb + (bar * tpb * 4)
             end = start + (int(dict_rev["note_dur"][f"{tokens[2]}"][8:]) * (1/8) * tpb)
-            pitch = int(dict_rev["pitch_instrument"][f"{tokens[3]}"][5:8])
+            pitch = int(dict_rev["pitch_instrument"][f"{tokens[3]}"][5:7])
             note = ct.Note(start=int(start), end=int(end), pitch=pitch, velocity=100)
 
             # assign to the right instrument
             inst = {"drums": 0, "bass": 1, "piano": 2}
-            inst_idx = inst[dict_rev["pitch_instrument"][f"{tokens[3][9:]}"]]
+            inst_idx = inst[dict_rev["pitch_instrument"][f"{tokens[3]}"][8:]]
             res.instruments[inst_idx].notes.append(note)
 
             counter += 1
@@ -1247,9 +1247,9 @@ def test_tokenizer(tokenizer: MidiTokenizerBase):
 
 if __name__ == "__main__":
 
-    #tokenize_dataset(MidiTokenizerPooled3, "tokens_pooled_withbars")
+    #test_tokenizer(MidiTokenizerPooled3)
 
-    test_tokenizer(MidiTokenizerPooled2)
+    tokenize_dataset(MidiTokenizerPooled3, "tokens_pooled_pitch_ins")
 
     # test MidiTokenizerPooled
     '''
