@@ -6,22 +6,8 @@ from typing import Union
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from tokenizer import MidiTokenizerPooled
-from musictransformer import MusicTransformer
-
-class Prompt(Dataset):
-    """Allows use of Dataloader to move input_ids to cuda"""
-    def __init__(self, ids: list[int]):
-        self.data = torch.LongTensor(ids)
-
-        if self.data.dim() == 1:
-            self.data = self.data.reshape(1,-1)
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        return {"input_ids": self.data[idx]}
+from tokenizer import MidiTokenizerPooled, MidiTokenizerPooled2, MidiTokenizerPooled3
+from musictransformer import MusicTransformer2
 
 def generate_sample(json_file: Union[str,Path],
                     prompt_idx: int=500,
@@ -37,13 +23,14 @@ def generate_sample(json_file: Union[str,Path],
 
     if prompt_idx > len(testprompt):
         prompt_idx = len(testprompt)
-    prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, 4)
+    prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, 5)
 
     print("Prompt Size: ", prompt.size())
+    print("Prompt from idx: ", prompt_idx)
 
     gen = model.generate(prompt, **kwargs)
 
-    gen = gen.reshape(-1, 4).tolist()
+    gen = gen.reshape(-1, 5).tolist()
 
     if print_new_events:
         print("===========================NEW EVENTS================================")
@@ -63,25 +50,24 @@ if __name__ == "__main__":
     device = torch.device("cpu")
 
     # load model
-    tokenizer = MidiTokenizerPooled()
+    tokenizer = MidiTokenizerPooled2()
 
-    model = torch.load("musictransformer/musictransformer-full-1.pth")
+    model = torch.load("musictransformer/musictransformer-full-3.pth")
     model.to(device)
 
+ 
     genconfig = {
         "temperature": [1.0, 1.0, 1.0, 1.0],
         "num_bars": 8,
-        "max_steps": 512,
-        "force_bar": False,
+        "max_steps": 128,
         "sampling_fn": "top_k",
         "threshold": [0.85, 0.85, 0.85, 0.85],
         "bar_token": 4
     }
 
-    #generate_sample("tokens_pooled/0.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
-    #generate_sample("tokens_pooled/16.json", prompt_idx=512, print_new_events=True, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
+    # note model misbehaves if prompt_idx is bigger than length of JSON as the last prompt is EOS. Do we need to pad?
+    generate_sample("tokens_pooled_withbars/0.json", prompt_idx=256, print_new_events=True, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
+    generate_sample("tokens_pooled_withbars/16.json", prompt_idx=256, print_new_events=True, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
     
     for i in range(3):
-        generate_sample("noprompt.json", prompt_idx=512, print_new_events=True, out_dir=f"musictransformer/gen-noprompt{i}.mid", save_prompt_separately=False, **genconfig)
-
-    
+        generate_sample("noprompt_withbartokens.json", prompt_idx=2, print_new_events=True, out_dir=f"musictransformer/gen-noprompt{i}.mid", save_prompt_separately=False, **genconfig)
