@@ -53,13 +53,13 @@ if __name__ == "__main__":
     # load model
     tokenizer = MidiTokenizerPooled3()
 
-    model = torch.load("musictransformer/musictransformer-full-15.pth")
+    model = torch.load("musictransformer/musictransformer-full-17.pth")
     model.to(device)
 
     #[0.6, 0.8, 0.8, 0.5 or 0.6] or [0.6, 0.7, 0.7, 0.8] - best so far for 512 for musictransformer-full-7
-    # higher temperatures at [0.7, 0.9, 0.9, 0.9] seem to work better for a more trained model like musictransformer-full-15
+    # higher temperatures at [0.7, 0.8, 0.8, 0.7] seem to work better for a more trained model like musictransformer-full-15
     genconfig = {
-        "temperature": [0.7, 0.9, 0.9, 0.9], #[0.6, 0.8, 0.8, 0.5 or 0.6] or [0.6, 0.7, 0.7, 0.8] - best so far for 512 for musictransformer-full-7
+        "temperature": [0.7, 0.8, 0.9, 0.6],
         "num_bars": 32,
         "max_steps": 1024,
         "sampling_fn": "top_k",

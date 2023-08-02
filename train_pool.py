@@ -85,8 +85,6 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
         print(f"Epoch {epoch} Average Loss: {sum(losses) / num_batch}")
         torch.save(model, f"{filename}/{filename}-full-{epoch}.pth")
 
-    print(f"Final Train Loss: {loss:.4f}")
-
 if __name__ == "__main__":
     tokenizer = MidiTokenizerPooled3() # CHANGE IF REQUIRED
 
@@ -107,11 +105,10 @@ if __name__ == "__main__":
         d_model=512,
         dropout=0.1)
 
-
     device = torch.device("mps")
     model.to(device)
 
-    train(train_dataset, model, batch_size=12, num_epochs=8, lr=5e-4, filename="musictransformer", loggingsteps=20000)
+    train(train_dataset, model, batch_size=12, num_epochs=2, lr=5e-4, filename="musictransformer", loggingsteps=20000)
 
  
 
