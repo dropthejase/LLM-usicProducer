@@ -83,7 +83,7 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
             steps += batch_size
 
         print(f"Epoch {epoch} Average Loss: {sum(losses) / num_batch}")
-        torch.save(model, f"{filename}/{filename}-full-{epoch+8}.pth")
+        torch.save(model, f"{filename}/{filename}-full-{epoch}.pth")
 
     print(f"Final Train Loss: {loss:.4f}")
 
@@ -108,7 +108,6 @@ if __name__ == "__main__":
         dropout=0.1)
 
 
-    model = torch.load("musictransformer/musictransformer-full-7.pth")
     device = torch.device("mps")
     model.to(device)
 
