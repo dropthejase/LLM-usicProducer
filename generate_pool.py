@@ -53,23 +53,26 @@ if __name__ == "__main__":
     # load model
     tokenizer = MidiTokenizerPooled3()
 
-    model = torch.load("musictransformer/musictransformer-full-7.pth")
+    model = torch.load("musictransformer/musictransformer-full-15.pth")
     model.to(device)
 
- 
+    #[0.6, 0.8, 0.8, 0.5 or 0.6] or [0.6, 0.7, 0.7, 0.8] - best so far for 512 for musictransformer-full-7
+    # higher temperatures at [0.7, 0.9, 0.9, 0.9] seem to work better for a more trained model like musictransformer-full-15
     genconfig = {
-        "temperature": [0.9, 0.9, 0.9, 0.9],
-        "num_bars": 8,
-        "max_steps": 128,
+        "temperature": [0.7, 0.9, 0.9, 0.9], #[0.6, 0.8, 0.8, 0.5 or 0.6] or [0.6, 0.7, 0.7, 0.8] - best so far for 512 for musictransformer-full-7
+        "num_bars": 32,
+        "max_steps": 1024,
         "sampling_fn": "top_k",
-        "threshold": [0.85, 0.85, 0.85, 0.85],
+        "threshold": [0.9, 0.9, 0.9, 0.9],
         "bar_token": 4
     }
 
-    # note model misbehaves if prompt_idx is bigger than length of JSON as the last prompt is EOS. Do we need to pad?
+    # long prompts seem to be better, as well as lower temperatures (especially for bar token)
     
-    generate_sample("tokens_pooled_pitch_ins/0.json", prompt_idx=6, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
-    generate_sample("tokens_pooled_pitch_ins/16.json", prompt_idx=256, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
+    #generate_sample("tokens_pooled_pitch_ins/0.json", prompt_idx=1024, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
+    #generate_sample("tokens_pooled_pitch_ins/16.json", prompt_idx=1024, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
+    #generate_sample("tokens_pooled_pitch_ins/20.json", prompt_idx=1024, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-20.mid", save_prompt_separately=True, **genconfig)
+    #generate_sample("tokens_pooled_pitch_ins/24.json", prompt_idx=2056, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-24.mid", save_prompt_separately=True, **genconfig)
     
     for i in range(3):
         generate_sample("noprompt_pitch_ins.json",

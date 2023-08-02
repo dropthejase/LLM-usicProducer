@@ -762,8 +762,18 @@ class MusicTransformer3(nn.Module):
             logit_note_dur = outputs[2][:, -1, :]
             logit_pitch_instrument = outputs[3][:, -1, :]
 
-            # sample
+            # make sure we are continuing the song - bar must be at least the same bar as 'current_bar'
+            # also prevent 'skipping' more than 1 bars max
             sample_bar = self.sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])
+            #print("step: ", steps, " sample bar: ", sample_bar.item(), " current bar: ", current_bar)
+
+            '''while sample_bar.item() < current_bar:
+                sample_bar = self.sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])'''
+            '''while sample_bar.item() - current_bar > 1:
+                print("step: ", steps, " sample bar: ", sample_bar.item(), " current bar: ", current_bar)
+                sample_bar = self.sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])'''
+
+            # sample the rest
             sample_start_pos = self.sample(logit_start_pos, temperature=temperature[1], sampling_fn=sampling_fn, threshold=threshold[1])
             sample_note_dur = self.sample(logit_note_dur, temperature=temperature[2], sampling_fn=sampling_fn, threshold=threshold[2])
             sample_pitch_instrument = self.sample(logit_pitch_instrument, temperature=temperature[3], sampling_fn=sampling_fn, threshold=threshold[3])

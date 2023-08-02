@@ -1178,12 +1178,17 @@ class MidiTokenizerPooled3(MidiTokenizerBase):
             bar = int(dict_rev["bar"][f"{tokens[0]}"][3:])
             start = int(dict_rev["start_pos"][f"{tokens[1]}"][9:]) * (1/8) * tpb + (bar * tpb * 4)
             end = start + (int(dict_rev["note_dur"][f"{tokens[2]}"][8:]) * (1/8) * tpb)
-            pitch = int(dict_rev["pitch_instrument"][f"{tokens[3]}"][5:7])
+            
+            pitch_instrument = dict_rev["pitch_instrument"][f"{tokens[3]}"][5:].split("_")
+            pitch, instrument = pitch_instrument[0], pitch_instrument[1]
+            pitch = int(pitch)
+            
             note = ct.Note(start=int(start), end=int(end), pitch=pitch, velocity=100)
 
             # assign to the right instrument
             inst = {"drums": 0, "bass": 1, "piano": 2}
-            inst_idx = inst[dict_rev["pitch_instrument"][f"{tokens[3]}"][8:]]
+
+            inst_idx = inst[instrument]
             res.instruments[inst_idx].notes.append(note)
 
             counter += 1
@@ -1247,9 +1252,9 @@ def test_tokenizer(tokenizer: MidiTokenizerBase):
 
 if __name__ == "__main__":
 
-    #test_tokenizer(MidiTokenizerPooled3)
+    test_tokenizer(MidiTokenizerPooled3)
 
-    tokenize_dataset(MidiTokenizerPooled3, "tokens_pooled_pitch_ins")
+    #tokenize_dataset(MidiTokenizerPooled3, "tokens_pooled_pitch_ins")
 
     # test MidiTokenizerPooled
     '''
