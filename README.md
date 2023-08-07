@@ -3,7 +3,13 @@ Attempt at creating a transformer capable of symbolic music generation. Focussin
 
 ## Proposed Architecture
 
+
+
 ## Data
+### My own dataset
+A bunch of my own songs for fun!
+
+### LA MIDI Dataset
 The LA MIDI Dataset has been cleaned in the following ways:
 * Removed songs without 4/4 time
 * Removed songs with no drums
@@ -18,19 +24,24 @@ During tokenization, any further songs that create errors are removed. Typically
 ## Other Tests
 
 ## Instructions
-### Download Datasets
-Download the following datasets and save into working directory:
-* My personal dataset: 
-* LMD Cleaned: 
+### Training
+#### Download Datasets
+Download the LMD dataset and save into working directory:
+Note I have removed my own songs from this dataset - sorry!
 
-### Tokenize
+#### Tokenize
 
-### Prepare Dataset
+#### Prepare Dataset
 
-### Train
+#### Train
 
 ### Generate
 Download the model here and unzip into the working directory
 * This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
 * Unfortunately the model's object name is called 'Transformer3' as I had experimented quite a few iterations beforehand
 
+## Acknowledgments
+
+## References
+Dong, H.-W., Chen, K., Dubnov, S., McAuley, J., & Berg-Kirkpatrick, T. (2022). Multitrack Music Transformer: Learning Long-Term Dependencies in Music with Diverse Instruments. ArXiv:2207.06983 [Cs, Eess]. https://arxiv.org/abs/2207.06983
+Hsiao, W.-Y., Liu, J.-Y., Yeh, Y.-C., & Yang, Y.-H. (2021). Compound Word Transformer: Learning to Compose Full-Song Music over Dynamic Directed Hypergraphs. ArXiv:2101.02402 [Cs, Eess]. https://arxiv.org/abs/2101.02402

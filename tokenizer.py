@@ -406,8 +406,8 @@ def tokenize_dataset(tokenizer: MidiTokenizerBase, tokens_folder: Union[str,Path
     tokenizer = tokenizer()
     
     # tokenize my own dataset
-    for i in Path('dataset').glob('*[0-9].mid'):
-            tokenizer(i, tokens_folder.joinpath(f'{i.stem}.json'))
+    #for i in Path('dataset').glob('*[0-9].mid'):
+    #        tokenizer(i, tokens_folder.joinpath(f'{i.stem}.json'))
 
     # tokenize LMD
     lmd_path = Path('lmd_cleaned2')
