@@ -6,6 +6,13 @@ See 'samples' folder for examples of generated samples from scratch.
 
 After cloning the repo and installing dependencies from `requirements.txt`, do the following:
 
+### Download Model
+Download the model here and unzip into the working directory
+* This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
+* Unfortunately the model's object name is called 'Transformer3' as I had experimented quite a few iterations beforehand
+
+You can either follow the below instructions or use the functions within the relevant .py files. The below instructions uses the command line interface.
+
 ### Inference from Scratch
 ~~~
 TODO - write a script and use CIL to merge 3 separate midi files
@@ -38,11 +45,13 @@ Currently music transformers can either generate symbolically (e.g. generate MID
 * We can more easily represent MIDI data as words in the English dictionary. Given that the popular use case of LLMs are to do with language generation in one way or another (e.g. GPT, BERT...), one might naturally hypothesise that we could pivot slightly to train transformers on linguistic representations of music.
 
 ## Tokenization Methodology
-Various different tokenization methodologies for MIDI exist, which can be summarised in the MidiTok library (https://miditok.readthedocs.io/en/latest/tokenizations.html). I decided to opt for a pooled embedding, drawing inspiration from MMT (Dong et al., 2022) and CP Word (Hsiao et al., 2021) in particular. However, I simplify the vocab list, stripping away 'nice-to-have' information such as:
-* Velocity: i.e. how 'hard' a note is hit - if desired, the end user can alter velocity if humanisation is desired; DAWs such as Ableton allow for randomising velocity or introducing 'groove' to humanise MIDI tracks
-* Any other attributes (beyond note duration) that describe how a note is played such as after-touch and pitch bend - these can be later controlled by the end user if desired
-* Time signature: as we are keeping to 4/4 time
-* Any pieces with a ticks-per-beat not divisible by 8 - it just makes it harder for my tokenizer to tokenizer and decode and I'm too lazy to try and solve for it :joy:
+Various different tokenization methodologies for MIDI exist, which can be summarised in the MidiTok library (https://miditok.readthedocs.io/en/latest/tokenizations.html).
+
+I decided to opt for a pooled embedding, drawing inspiration from MMT (Dong et al., 2022) and CP Word (Hsiao et al., 2021) in particular. However, I simplify the vocab list, stripping away 'nice-to-have' information such as:
+* **Velocity:** i.e. how 'hard' a note is hit - if desired, the end user can alter velocity if humanisation is desired; DAWs such as Ableton allow for randomising velocity or introducing 'groove' to humanise MIDI tracks
+* Any other attributes (beyond note duration) that describe how a note is played such as **after-touch** and **pitch bend** - these can be later controlled by the end user if desired
+* **Time signature:** as we are keeping to 4/4 time
+* **Any pieces with a ticks-per-beat not divisible by 8** - it just makes it harder for my tokenizer to tokenizer and decode and I'm too lazy to try and solve for it :joy:
 
 Essentially each token comprises an array with the following 'token families':
 
@@ -55,8 +64,8 @@ Essentially each token comprises an array with the following 'token families':
 * `start_pos` represents the start position of a note. Each bar is divided into 32 equally spaced possible start positions; my tokenizer will automatically quantise notes that do not conform to this
 * `note_dur` represents note duration, up to 4 bars
 * `pitch_instrument` represents a combination of pitch and instrument [^1]
- * Pitch ranges from 21 (A0) to 108 (C8) for bass and piano (the rationale being that it covers the range of an 88-key piano) [^2]
- * Pitch ranges 35 to 81 for drums per General MIDI 1 Sound Set
+  * Pitch ranges from 21 (A0) to 108 (C8) for bass and piano (the rationale being that it covers the range of an 88-key piano) [^2]
+  * Pitch ranges 35 to 81 for drums per General MIDI 1 Sound Set
 
 [^1]: When I did not combine instrument and pitch together, I found that because drums would often have (a high abundance) of repeated notes of the same pitch (corresponding to common parts such as the kick drum, snare and closed hihats), the model might generalise this to the piano and bass parts and cause them to continuously repeat notes that don't make harmonic 'sense' (unless when applied to drums). The opposite also happened where a wider range pitches typically characteristic of a piano part, would generalise to a drum part, leading to the drums playing a wide range of incoherent notes. Combining them together seemed to help prevent these.
 [^2]: In hindsight, it may've been worth starting the ranges lower for the bass, as subbass parts could go down to C0. I could have also restricted the higher end of the bass pitch range.
@@ -64,7 +73,7 @@ Essentially each token comprises an array with the following 'token families':
 ### Why use pooled embeddings?
 Pooled embeddings can offer advantages such as much shorter sequence lengths, enabling the model to attend to a larger context window. In addition, 'successive' or 'sequential' representations such as REMI (Huang & Yang, 2020) also requires the model to learn the order / format of these tokens. Indeed in one of my earlier 'proof-of-concept' tests where I tried a tokenization format of `bar start_pos note_dur pitch instrument` (this was before my pitch_instrument idea), I found that the model might apply the wrong order of tokens or miss one out entirely, creating errors when I try to reconvert the tokens back to MIDI.
 
-However, the disadvantage with separating embeddings for each of these  is the inability for associations to be formed across the four token families. These associations can also carry useful information - for example, a kick drum (pitch35_drum or pitch36_drum) might typically occur on start_pos(itions) corresponding to each quarter note.
+However, the disadvantage with separating embeddings for each of these  is the inability for associations to be formed across the four token families. These associations can also carry useful information - for example, a kick drum (`pitch35_drum` or `pitch36_drum`) might typically occur on `start_pos`(-itions) corresponding to each quarter note.
 
 ## Data
 The following datasets have been used, totalling around 11,000 songs:
@@ -77,8 +86,8 @@ The LA MIDI Dataset has been cleaned in the following ways:
 * Removed songs without 4/4 time
 * Removed songs with no drums
 * Stripped midi such that there are only:
- * Three parts: drums, bass (programs 33-40) and piano (or piano equivalent)
- * The piano equivalent is based on a piano (programs 1-8) / guitar (25-32) / synth pads (89-96) / organs (17-24); if there are multiple candidates, then for simplicity, we take the instrument with the most notes
+  * Three parts: drums, bass (programs 33-40) and piano (or piano equivalent)
+  * The piano equivalent is based on a piano (programs 1-8) / guitar (25-32) / synth pads (89-96) / organs (17-24); if there are multiple candidates, then for simplicity, we take the instrument with the most notes
 
 During tokenization, any further songs that create errors are removed. Typically this occurs when the MIDI has a pitch that is outside of the range of pitches available in our vocab list.
 
@@ -122,15 +131,7 @@ TODO
 ~~~
 
 ### Generate
-Download the model here and unzip into the working directory
-* This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
-* Unfortunately the model's object name is called 'Transformer3' as I had experimented quite a few iterations beforehand
-
-You can either follow the below instructions or use the functions within the relevant .py files.
-
-#### Inference from Scratch
-
-#### Inference with Prompt
+See 'Quickstart' above
 
 ## Acknowledgments
 Dong et al., 2022 and Hsiao et al., 2021 for easily the idea and (relatively) easily understandable code!
