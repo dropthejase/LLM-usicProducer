@@ -165,3 +165,11 @@ cython_debug/
 /lmd_cleaned2
 /tokens4
 /transXL
+/fast-transformers
+/musictransformer*/
+/tokens*
+/dataset
+/'testfile Project'
+
+musictransformer-full-22.pth
+dataset_pitch_ins512.pt

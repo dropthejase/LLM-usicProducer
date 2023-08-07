@@ -1,6 +1,6 @@
-from tokenizer import MidiTokenizerPooled, MidiTokenizerPooled2, MidiTokenizerPooled3
+from tokenizer import MidiTokenizerPooled
 from prepare import MIDIDataset
-from musictransformer import MusicTransformer, MusicTransformer2, MusicTransformer3
+from musictransformer import MusicTransformer3
 
 from tqdm import tqdm
 from pathlib import Path
@@ -26,6 +26,7 @@ def print_trainable_parameters(model):
     print(
         f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param:.2f}"
     )
+
 
 def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggingsteps=1000):
     """
@@ -86,7 +87,7 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
         torch.save(model, f"{filename}/{filename}-full-{epoch}.pth")
 
 if __name__ == "__main__":
-    tokenizer = MidiTokenizerPooled3() # CHANGE IF REQUIRED
+    tokenizer = MidiTokenizerPooled() # CHANGE IF REQUIRED
 
     # load Dataset
     dataset = MIDIDataset(load_path="dataset_pitch_ins512.pt") # CHANGE IF REQUIRED
@@ -98,17 +99,20 @@ if __name__ == "__main__":
     # create model
     model = MusicTransformer3(
         n_tokens=tokenizer.vocab["n_tokens"],
-        emb_sizes=[512, 128, 256, 512], # transformer1 [128, 512, 512, 32], # transformer2 [all 512]
+        emb_sizes=[512, 128, 256, 512],
         emb_pooling="concat",
         n_layers=12,
         n_heads=8,
         d_model=512,
         dropout=0.1)
 
+    # ... or load checkpoint
+    model = torch.load("musictransformer/musictransformer-full-22.pth")
     device = torch.device("mps")
     model.to(device)
 
-    train(train_dataset, model, batch_size=12, num_epochs=2, lr=5e-4, filename="musictransformer", loggingsteps=20000)
+    print("Train Dataset Size: ", len(train_dataset))
+    train(train_dataset, model, batch_size=12, num_epochs=1, lr=5e-4, filename="musictransformerTEST", loggingsteps=20000)
 
  
 

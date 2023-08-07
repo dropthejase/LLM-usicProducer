@@ -4,10 +4,8 @@ from pprint import pprint
 from typing import Union
 
 import torch
-from torch.utils.data import Dataset, DataLoader
 
-from tokenizer import MidiTokenizerPooled, MidiTokenizerPooled2, MidiTokenizerPooled3
-from musictransformer import MusicTransformer2
+from tokenizer import MidiTokenizerPooled
 
 def generate_sample(json_file: Union[str,Path],
                     prompt_idx: int=500,
@@ -24,7 +22,7 @@ def generate_sample(json_file: Union[str,Path],
 
     if prompt_idx > len(testprompt):
         prompt_idx = len(testprompt)
-    prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, num_token_families)
+    prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, num_token_families).to(device)
 
     print("Prompt Size: ", prompt.size())
     print("Prompt from idx: ", prompt_idx)
@@ -48,18 +46,19 @@ def generate_sample(json_file: Union[str,Path],
 
 if __name__ == "__main__":
 
-    device = torch.device("cpu")
+    device = torch.device("mps")
 
     # load model
-    tokenizer = MidiTokenizerPooled3()
+    tokenizer = MidiTokenizerPooled()
 
-    model = torch.load("musictransformer/musictransformer-full-17.pth")
+    model = torch.load("musictransformer/musictransformer-full-22.pth")
     model.to(device)
 
     #[0.6, 0.8, 0.8, 0.5 or 0.6] or [0.6, 0.7, 0.7, 0.8] - best so far for 512 for musictransformer-full-7
-    # higher temperatures at [0.7, 0.8, 0.8, 0.7] seem to work better for a more trained model like musictransformer-full-15
+    # higher temperatures at [0.7, 0.8, 0.8, 0.6-0.8] seem to work better for a more trained model like musictransformer-full-15
+    # [0.8, 0.6-0.7, 0.6-0.7, 0.8] seems good for transformer-full-22
     genconfig = {
-        "temperature": [0.7, 0.8, 0.9, 0.6],
+        "temperature": [0.8, 0.6, 0.6, 0.8], 
         "num_bars": 32,
         "max_steps": 1024,
         "sampling_fn": "top_k",
@@ -67,18 +66,12 @@ if __name__ == "__main__":
         "bar_token": 4
     }
 
-    # long prompts seem to be better, as well as lower temperatures (especially for bar token)
-    
-    #generate_sample("tokens_pooled_pitch_ins/0.json", prompt_idx=1024, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-0.mid", save_prompt_separately=True, **genconfig)
-    #generate_sample("tokens_pooled_pitch_ins/16.json", prompt_idx=1024, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-16.mid", save_prompt_separately=True, **genconfig)
-    #generate_sample("tokens_pooled_pitch_ins/20.json", prompt_idx=1024, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-20.mid", save_prompt_separately=True, **genconfig)
-    #generate_sample("tokens_pooled_pitch_ins/24.json", prompt_idx=2056, print_new_events=True, num_token_families=4, out_dir="musictransformer/gen-24.mid", save_prompt_separately=True, **genconfig)
-    
+  
     for i in range(3):
         generate_sample("noprompt_pitch_ins.json",
                         prompt_idx=2,
                         print_new_events=True,
                         num_token_families=4,
-                        out_dir=f"musictransformer/gen-noprompt{i}.mid",
+                        out_dir=f"musictransformerxl/gen-noprompt{i}.mid",
                         save_prompt_separately=False,
                         **genconfig)
