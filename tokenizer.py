@@ -1,3 +1,5 @@
+import argparse
+from datetime import datetime
 import json
 from pathlib import Path
 from tqdm import tqdm
@@ -23,6 +25,17 @@ class MidiTokenizerBase:
     """base class for tokenizers"""
     def __init__(self):
         pass
+    
+    def create_vocab(self, vocab: Union[str,Path,dict]) -> dict:
+        if isinstance(vocab, dict):
+            return dict
+        else:
+            if isinstance(vocab, str):
+                vocab = Path(vocab)
+            if not vocab.exists() or vocab.suffix not in ['.json']:
+                raise FileNotFoundError('Please provide a valid filepath to the json file containing the vocab list')
+            with open(vocab) as file:
+                return json.load(file)
 
     @staticmethod
     def quantize(midifile: parser.MidiFile) -> parser.MidiFile:
@@ -76,36 +89,39 @@ class MidiTokenizerBase:
 
 class MidiTokenizerNoPool(MidiTokenizerBase):
     """
-    bar-startpos-notedur-pitch-ins
-    bars go from 0 - 128
+    bar-startpos-notedur-pitch_ins
+    bars go from 0 - 255
     """
-    def __init__(self):
+    def __init__(self, vocab: Union[str,Path,dict]="encoding_nopool_pitch_ins.json"):
+        """
+        vocab: can be a dict variable, or a str or Path to the .json file with the vocab list
+        """
         super().__init__()
-        with open("encoding_nopool.json") as file:
-            self.vocab = json.load(file)
+        self.vocab = self.create_vocab(vocab)
 
-
-    def __call__(self, filepath: Union[str,Path], out_dir: Union[str,Path]=None) -> dict:
+    def __call__(self, midifile: Union[str,Path,parser.MidiFile], out_dir: Union[str,Path]=None) -> dict:
         """
-        tokenizes midifile
-        return dict comprising {"ids": list of ids, "events": list of events}
+        tokenizes either a MidiFile object or a path to the .mid file
+        returns dict comprising {"ids": list of ids, "events": list of events}
         """
 
-        # check file exists
-        if not isinstance(filepath, Path):
-            filepath = Path(filepath)
-        if not filepath.exists() or filepath.suffix not in ['.mid']:
-            raise FileNotFoundError('Please provide filepath to the .mid file')
+        if not isinstance(midifile, parser.MidiFile):
 
-        # create Midi parser
-        try:
-            midifile = parser.MidiFile(filepath)
-        except:
-            print("Skipped: ", filepath)
-            return
+            # check file exists
+            if not isinstance(midifile, Path):
+                midifile = Path(midifile)
+            if not midifile.exists() or midifile.suffix not in ['.mid']:
+                raise FileNotFoundError('Please provide filepath to the .mid file')
+
+            # create Midi parser
+            try:
+                midifile = parser.MidiFile(midifile)
+            except:
+                print("Skipped: ", midifile)
+                return
 
         if midifile.ticks_per_beat % 8 != 0:
-            print(f"Skipped (TPB = {midifile.ticks_per_beat}): ", filepath)
+            print(f"Skipped (TPB = {midifile.ticks_per_beat}): ", midifile)
             return
 
         # quantize
@@ -138,7 +154,7 @@ class MidiTokenizerNoPool(MidiTokenizerBase):
             if note.start // (tpb * 4) >= (bar_count + 1):
                 bar_count += 1
             res["ids"].append(self.vocab[f"bar{bar_count}"])
-            res["events"].append(f"BAR{bar_count}")
+            res["events"].append(f"bar{bar_count}")
 
             # START_POS
             start_pos = int((note.start % (tpb * 4)) / (tpb / 8))
@@ -150,13 +166,9 @@ class MidiTokenizerNoPool(MidiTokenizerBase):
             res["ids"].append(self.vocab[f"note_dur{note_dur}"])
             res["events"].append(f"note_dur{note_dur}")
 
-            # PITCH
-            res["ids"].append(self.vocab[f"pitch{note.pitch}"])
-            res["events"].append(f"pitch{note.pitch}")
-
-            # INSTRUMENT
-            res["ids"].append(self.vocab[note.instrument])
-            res["events"].append(note.instrument)
+            # PITCH_INSTRUMENT
+            res["ids"].append(self.vocab[f"pitch{note.pitch}_{note.instrument}"])
+            res["events"].append(f"pitch{note.pitch}_{note.instrument}")
 
         # EOS
         res["ids"].append(self.vocab["EOS_None"])
@@ -191,22 +203,30 @@ class MidiTokenizerNoPool(MidiTokenizerBase):
         while counter < len(tokens_list) - 4: # change this if changing tokenizer format
             token = tokens_list[counter]
 
-            if dict_rev[str(token)] in ['PAD_None','BOS_None','EOS_None','Mask_None']:
+            if dict_rev[f'{token}'] in ['PAD_None','BOS_None','EOS_None','Mask_None']:
                 counter += 1
                 continue
 
             # create Note object
-            if 'bar' in dict_rev[str(token)] and dict_rev[str(tokens_list[counter+4])] in ['drums', 'bass', 'piano']:
-                bar_num = int(dict_rev[str(token)][3:])
-                start = int(dict_rev[str(tokens_list[counter+1])][9:]) * (1/8) * tpb + (bar_num * tpb * 4)
-                end = start + (int(dict_rev[str(tokens_list[counter+2])][8:]) * (1/8) * tpb)
-                pitch = int(dict_rev[str(tokens_list[counter+3])][5:])
+            if 'bar' in dict_rev[f'{token}'] and \
+            'start_pos' in dict_rev[f'{tokens_list[counter+1]}'] and \
+            'note_dur' in dict_rev[f'{tokens_list[counter+2]}'] and \
+            tokens_list[counter+3] >= 292:
+                
+                bar_num = int(dict_rev[f'{token}'][3:])
+                start = int(dict_rev[f'{tokens_list[counter+1]}'][9:]) * (1/8) * tpb + (bar_num * tpb * 4)
+                end = start + (int(dict_rev[f'{tokens_list[counter+2]}'][8:]) * (1/8) * tpb)
+
+                pitch_instrument = dict_rev[f'{tokens_list[counter+3]}'][5:].split("_")
+                pitch, instrument = pitch_instrument[0], pitch_instrument[1]
+                pitch = int(pitch)
+
                 note = ct.Note(start=int(start), end=int(end), pitch=pitch, velocity=100)
 
-                inst_idx = inst[dict_rev[str(tokens_list[counter+4])]]
+                inst_idx = inst[instrument]
                 res.instruments[inst_idx].notes.append(note)
 
-                counter += 5
+                counter += 4
 
             else:
                 print("Counter: ", counter, " Tokens List: ", tokens_list[counter])
@@ -219,11 +239,13 @@ class MidiTokenizerNoPool(MidiTokenizerBase):
 
 class MidiTokenizerPooled(MidiTokenizerBase):
     """
-    bar-startpos-notedur-pitchins (pitch and ins are concat)
+    bar-startpos-notedur-pitch_ins (pitch and ins are concat)
     """
-    def __init__(self):
-        with open("encoding_pooled_pitch_ins.json") as file:
-            self.vocab = json.load(file)
+    def __init__(self, vocab: Union[str,Path,dict]="encoding_pooled_pitch_ins.json"):
+        """
+        vocab: can be a dict variable, or a str or Path to the .json file with the vocab list
+        """
+        self.vocab = self.create_vocab(vocab)
 
     def __call__(self, filepath: Union[str,Path], out_dir: Union[str,Path]=None) -> dict:
         """
@@ -392,7 +414,8 @@ class MidiTokenizerPooled(MidiTokenizerBase):
 
         return res
     
-def tokenize_dataset(tokenizer: MidiTokenizerBase, tokens_folder: Union[str,Path]):
+
+def tokenize_dataset(tokenizer: MidiTokenizerBase, tokens_folder: Union[str,Path]="tokens", midi_files: Union[str,Path,list[Union[str,Path]]]="lmd_cleaned2"):
     """
     Function to tokenize my dataset and LMD dataset
     Inputs
@@ -409,25 +432,98 @@ def tokenize_dataset(tokenizer: MidiTokenizerBase, tokens_folder: Union[str,Path
     #for i in Path('dataset').glob('*[0-9].mid'):
     #        tokenizer(i, tokens_folder.joinpath(f'{i.stem}.json'))
 
-    # tokenize LMD
-    lmd_path = Path('lmd_cleaned2')
-    for i in tqdm(lmd_path.glob('*.mid')):
+    # if single file provided, turn into a list
+    if not isinstance(midi_files, list):
+        if not isinstance(midi_files, Path):
+            midi_files = Path(midi_files)
+        if not midi_files.exists():
+            raise FileNotFoundError("Please provide a valid path to the .mid file")
+        midi_files = [midi_files]
+
+    # create text file
+    with open(f"{tokens_folder}/logs.txt", "a") as f:
+        f.write("=================================================================")
+        f.write("\n")
+        f.write(f"{datetime.now()}")
+        f.write("\n")
+        f.write("=================================================================")
+        f.write("\n")
+        f.write("\n")
+
+    # tokenize
+    for file in tqdm(midi_files):
+        
+        # check file or folder exists
+        if not isinstance(file, Path):
+            file = Path(file)
+        if not file.exists():
+            print(f"Skipped: {file.stem} as file could not be located")
+            continue
+        
+        # if list item is a single .mid
+        if file.suffix == ".mid":
             try:
-                tokenizer(i, tokens_folder.joinpath(f'{i.stem}.json'))
+                tokenizer(file, tokens_folder.joinpath(f'{file.stem}.json'))
             except Exception as e:
-                print(f"Skipped: {i.stem} due to {e}")
+                with open(f"{tokens_folder}/logs.txt", "a") as f:
+                    f.write(f"\n Skipped: {file.stem} due to {e}")
+                print(f"Skipped: {file.stem} due to {e}")
                 continue
+        
+        # if list item is a folder
+        else:
+            for i in tqdm(file.glob('*.mid')):
+                try:
+                    tokenizer(i, tokens_folder.joinpath(f'{i.stem}.json'))
+                except Exception as e:
+                    with open(f"{tokens_folder}/logs.txt", "a") as f:
+                        f.write(f"\n Skipped: {i.stem} due to {e}")
+                    print(f"Skipped: {i.stem} due to {e}")
+                    continue
     
     print(f"Total Songs: {list(tokens_folder.glob('*.json')).__len__()}")
+
 
 def test_tokenizer(tokenizer: MidiTokenizerBase):
     tokenizer = tokenizer()
     song0_tokenizer_tokens = tokenizer('test/song0.mid')
+    print(song0_tokenizer_tokens)
     print(song0_tokenizer_tokens['ids'])
     print(tokenizer.tokens_to_events(song0_tokenizer_tokens['ids']))
     tokenizer.create_midi_from_tokens(song0_tokenizer_tokens['ids']).dump("test/song0_regen_tok1.mid")
 
-if __name__ == "__main__":
 
-    #test_tokenizer(MidiTokenizerPooled)
-    tokenize_dataset(MidiTokenizerPooled, "tokens_pooled_pitch_ins")
+def main():
+
+    argparser = argparse.ArgumentParser(prog="Tokenizer", description="To tokenize MIDI files")
+    argparser.add_argument("-p", "--pooled", action='store_true', required=False, help="If used, will use MidiTokenizerPooled to tokenize dataset, otherwise will use MidiTokenizerNoPool")
+    argparser.add_argument("-td", "--tokenize_dataset", action='store_true', required=False, help="If used, will run tokenize_dataset function")
+    argparser.add_argument("tokens_folder", nargs="?", default="tokens", help="Provide an output directory for .json files containing tokenized dataset (default: a folder named 'tokens')")
+    argparser.add_argument("midi_files", nargs="*", default="lmd_cleaned2", help="Provide .mid files or folders containing .mid files to tokenize when -td option used (default: 'lmd_cleaned2')")
+    
+    ## TO DO - add dataset output_dir
+
+    args = argparser.parse_args()
+    print(args)
+
+    if args.pooled:
+        tokenizer = MidiTokenizerPooled
+    else:
+        tokenizer = MidiTokenizerNoPool
+
+    if not args.tokenize_dataset:
+        test_tokenizer(tokenizer)
+    
+    else:
+        if not args.midi_files:
+            tokenize_dataset(tokenizer, tokens_folder=args.tokens_folder)
+        else:
+            tokenize_dataset(tokenizer, tokens_folder=args.tokens_folder, midi_files=args.midi_files)
+
+
+if __name__ == "__main__":
+    
+    main()
+
+
+

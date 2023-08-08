@@ -4,31 +4,31 @@ Attempt at creating a transformer capable of symbolic music generation. Focussin
 ## Quickstart
 See 'samples' folder for examples of generated samples from scratch.
 
-After cloning the repo and installing dependencies from `requirements.txt`, do the following:
+After creating a virtual environment, cloning the repo, and installing dependencies from `requirements.txt`, do the following:
 
 ### Download Model
 Download the model here and unzip into the working directory
 * This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
 * Unfortunately the model's object name is called 'Transformer3' as I had experimented quite a few iterations beforehand
 
-You can either follow the below instructions or use the functions within the relevant .py files. The below instructions uses the command line interface.
+You can either follow the below instructions or import the functions within the relevant .py files into your own .py file if desired. The below instructions uses the command line interface.
 
 ### Inference from Scratch
 ~~~
-TODO - write a script and use CIL to merge 3 separate midi files
+TODO
 ~~~
 ### Inference using Prompt
-Clean your .mid file
+Merge your drums, bass and piano .mid files.
+**Important:** Please make sure your .mid files adhere to the following:
+* You should have up to three individual *single track* .mid files. They must be named either 'drums.mid', 'bass.mid' or 'piano.mid'. You don't have to have all three parts - for example, your prompt might only comprise a bass and piano.
+* Your drum instruments should conform to the GM1 Sound Set (see https://www.midi.org/specifications-old/item/gm-level-1-sound-set). For example your kick should be either pitch35 or pitch36.
+* Ticks per beat should be the same for all .mid files
 ~~~
-TODO - write a script and use CIL to merge 3 separate midi files
+python merge_midi <output director for resulting merged .mid file> <path/to/drums.mid> <path/to/bass.mid> <path/to/piano.mid> -n <merged_filename.mid>
 ~~~
-Tokenize the data
+Tokenize the .mid file(s)
 ~~~
-TODO - CIL
-~~~
-Create the prompt
-~~~
-TODO
+python -p -td tokenizer.py <output directory for tokens folder containing .json files> <path to .mid files (or folder containing .mid files)>
 ~~~
 Generate
 ~~~

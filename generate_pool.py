@@ -65,7 +65,6 @@ if __name__ == "__main__":
         "threshold": [0.9, 0.9, 0.9, 0.9],
         "bar_token": 4
     }
-
   
     for i in range(3):
         generate_sample("noprompt_pitch_ins.json",
