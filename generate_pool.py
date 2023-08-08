@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 import json
 from pathlib import Path
 from pprint import pprint
@@ -64,48 +65,34 @@ def generate_sample(json_file: Union[str,Path],
 
 def main():
 
-    device = torch.device("mps")
+    usage =\
+        """
+        \n
+        Example: generate 3 samples from scratch (leave --prompt blank for inference from scratch), saved in an 'inferences_from_scratch' folder
 
-    # load model
-    tokenizer = MidiTokenizerPooled()
+            -mp path/to/model.pth -d mps -o "inferences_from_scratch" -n 3
 
-    model = torch.load("musictransformer/musictransformer-full-22.pth")
-    model.to(device)
+        Example: generate 1 sample from prompt
 
-    #[0.6, 0.8, 0.8, 0.5 or 0.6] or [0.6, 0.7, 0.7, 0.8] - best so far for 512 for musictransformer-full-7
-    # higher temperatures at [0.7, 0.8, 0.8, 0.6-0.8] seem to work better for a more trained model like musictransformer-full-15
-    # [0.8, 0.6-0.7, 0.6-0.7, 0.8] seems good for transformer-full-22
-    genconfig = {
-        "temperature": [0.8, 0.6, 0.6, 0.8], 
-        "num_bars": 4,
-        "max_steps": 512,
-        "sampling_fn": "top_k",
-        "threshold": [0.9, 0.9, 0.9, 0.9],
-    }
-  
-    for i in tqdm(range(3)):
-        generate_sample("noprompt_pitch_ins.json",
-                        prompt_idx=2,
-                        print_new_events=True,
-                        num_token_families=4,
-                        out_dir=f"musictransformer/gen-noprompt{i}.mid",
-                        save_prompt_separately=False,
-                        **genconfig)
+            -p path/to/prompt.json -mp path/to/model.pth -d mps -o "generated"
 
+        """
 
-if __name__ == "__main__":
+    argparser = argparse.ArgumentParser("Generate Samples", usage=usage)
 
-    argparser = argparse.ArgumentParser("Generate Samples", usage="TODO")
     argparser.add_argument("-p", "--prompt", default=None, help="Path to .json file containing prompt tokens. Leave blank for inference from scratch (default: None).")
     argparser.add_argument("-mp", "--model_path", default="musictransformer/musictransformer-full-22.pth", help="Path to .pth model")
     argparser.add_argument("-d", "--device", choices=["cpu","cuda","mps"], default="cpu", help="torch.device to use")
-    argparser.add_argument("-pi", "--prompt_idx", help="Use if you want to truncate your prompt tokens")
+    argparser.add_argument("-pi", "--prompt_idx", type=int, help="Use if you want to truncate your prompt tokens")
     argparser.add_argument("-o", "--out_dir", default="generated_samples", help="Specify output folder for generated samples - include the '.mid' suffix (default: a folder called 'generated_samples')")
     argparser.add_argument("-sp", "--save_prompt", action="store_true", help="Use if you want to save your prompt separately for comparison purposes")
     argparser.add_argument("-pe", "--print_new_events", action="store_true", help="Use if you want to print new token events created")
     argparser.add_argument("-n", "--num_samples", type=int, default=1, help="Number of samples to generate")
 
+    argparser.add_argument("--genconfig", help="path to .json file containing genconfig")
+
     args = argparser.parse_args()
+    print(args)
 
     # make output folder if it does not exist
     out_dir = Path(args.out_dir)
@@ -120,19 +107,54 @@ if __name__ == "__main__":
     if isinstance(model, MusicTransformer3):
         tokenizer = MidiTokenizerPooled()
         num_token_families = 4
+        TEMPERATURE = [0.8, 0.6, 0.6, 0.8]
+        THRESHOLD = [0.9, 0.9, 0.9, 0.9]
+
     else:
         tokenizer = MidiTokenizerNoPool()
         num_token_families = 1
+        TEMPERATURE = [0.9]
+        THRESHOLD = [0.9]
+
 
     # gen config
+    #[0.6, 0.8, 0.8, 0.5 or 0.6] or [0.6, 0.7, 0.7, 0.8] - best so far for 512 for musictransformer-full-7
+    # higher temperatures at [0.7, 0.8, 0.8, 0.6-0.8] seem to work better for a more trained model like musictransformer-full-15
+    # [0.8, 0.6-0.7, 0.6-0.7, 0.8] seems good for transformer-full-22
+
+    # defaults
     genconfig = {
-        "temperature": [0.8, 0.6, 0.6, 0.8], 
-        "num_bars": 8,
-        "max_steps": 512,
-        "sampling_fn": "top_k",
-        "threshold": [0.9, 0.9, 0.9, 0.9],
-    }
+            "temperature": TEMPERATURE, 
+            "num_bars": 8,
+            "max_steps": 512,
+            "sampling_fn": "top_k",
+            "threshold": THRESHOLD,
+        }
+
+    # if genconfig json file provided, take those values where available
+    if args.genconfig:
+        with open(args.genconfig) as jsonfile:
+            config = json.load(jsonfile)
+
+        assert config["temperature"].__len__() == num_token_families, "Temperature must be list[float] where len(list) is 4 if using pooled embeddings or 1 otherwise"
+        assert config["threshold"].__len__() == num_token_families, "Threshold must be list[float] where len(list) is 4 if using pooled embeddings or 1 otherwise"
+
+        # override defaults where applicable
+        for k, v in config.items():
+            genconfig[k] = v
     
+    # log gen config
+    with open(f"{out_dir}/genconfigs.txt", "a") as f:
+        f.write("============================================================================================================================================ \n")
+        f.write(f"{datetime.now()}\n")
+        f.write("============================================================================================================================================ \n")
+        f.write(f"{genconfig}\n")
+        f.write(f"\n JSON_FILE: {'inference from scratch' if not args.prompt else args.prompt}")
+        f.write(f"\n PROMPT_IDX: {args.prompt_idx}")
+        f.write(f"\n OUTPUT_LOCATION: {args.out_dir}")
+        f.write(f"\n")
+        f.write(f"\n")
+        
     # generate
     for i in tqdm(range(args.num_samples)):
         generate_sample(json_file=args.prompt,
@@ -142,3 +164,8 @@ if __name__ == "__main__":
                         out_dir=f"{args.out_dir}/{i}.mid",
                         save_prompt_separately=args.save_prompt,
                         **genconfig)
+
+
+if __name__ == "__main__":
+
+    main()
