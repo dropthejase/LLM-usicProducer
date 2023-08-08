@@ -98,8 +98,8 @@ The following datasets have been used, totalling around 11,000 songs:
 ### My own dataset
 A bunch of my own songs for fun!
 
-### LA MIDI Dataset
-The LA MIDI Dataset has been cleaned in the following ways:
+### Lakh MIDI Dataset
+The Lakh MIDI Dataset (Raffel, 2016) has been cleaned in the following ways:
 * Removed songs without 4/4 time
 * Removed songs with no drums
 * Stripped midi such that there are only:
@@ -131,7 +131,7 @@ See samples folder for my favourites! These are all inferences from scratch.
 
 ## Instructions
 ### Training
-Download the LMD dataset and save into working directory:
+Download the Lakh dataset and save into working directory:
 Note I have removed my own songs from this dataset - sorry!
 
 #### Tokenize
@@ -159,14 +159,14 @@ TODO
 See 'Quickstart' above
 
 ## License / Attribution
-https://colinraffel.com/projects/lmd/#license
-https://creativecommons.org/licenses/by/4.0/
-
+The Lakh MIDI Dataset which was used to train this model is distributed with a CC-BY 4.0 license. Find out more via: https://creativecommons.org/licenses/by/4.0/ and https://colinraffel.com/projects/lmd/#license. Please seek legal advice if you wish to use this for commercial use - I will not be held responsible for any infringements or legal liabilities that may arise due to your use of the model or its underlying dataset.
 
 ## Acknowledgments
 Dong et al., 2022 and Hsiao et al., 2021 for easily the idea and (relatively) easily understandable code!
 
 YatingMusic for the amazing `miditoolkit` library
+
+lucidrains for the `x-transformers` library
 
 ## References
 **Dong, H.-W., Chen, K., Dubnov, S., McAuley, J., & Berg-Kirkpatrick, T. (2022).** Multitrack Music Transformer: Learning Long-Term Dependencies in Music with Diverse Instruments. ArXiv:2207.06983 [Cs, Eess]. https://arxiv.org/abs/2207.06983
@@ -174,5 +174,7 @@ YatingMusic for the amazing `miditoolkit` library
 **Hsiao, W.-Y., Liu, J.-Y., Yeh, Y.-C., & Yang, Y.-H. (2021).** Compound Word Transformer: Learning to Compose Full-Song Music over Dynamic Directed Hypergraphs. ArXiv:2101.02402 [Cs, Eess]. https://arxiv.org/abs/2101.02402
 
 **Huang, Y.-S., & Yang, Y.-H. (2020). Pop Music Transformer.** Proceedings of the 28th ACM International Conference on Multimedia. https://doi.org/10.1145/3394171.3413671
+
+**Colin, R. (2016)** "Learning-Based Methods for Comparing Sequences, with Applications to Audio-to-MIDI Alignment and Matching". PhD Thesis. https://colinraffel.com/publications/thesis.pdf
 
 **Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polosukhin, I. (2017).** Attention Is All You Need. ArXiv.org. https://arxiv.org/abs/1706.03762

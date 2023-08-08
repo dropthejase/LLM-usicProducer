@@ -221,7 +221,7 @@ class MusicTransformer3(nn.Module):
             json.dump(config, file)
     
     @torch.no_grad()
-    def generate(self, prompt, temperature=[1.0, 1.0, 1.0, 1.0], num_bars=8,  max_steps=50, sampling_fn="top_k", threshold=[0.9, 0.9, 0.9, 0.9], bar_token=4):
+    def generate(self, prompt, temperature=[1.0, 1.0, 1.0, 1.0], num_bars=8,  max_steps=50, sampling_fn="top_k", threshold=[0.9, 0.9, 0.9, 0.9]):
         """
         Generates samples
             prompt: should be a LongTensor of size N x T x 4 (for each of the token families)
@@ -244,6 +244,7 @@ class MusicTransformer3(nn.Module):
         
         steps = 0
         start_bar = current_bar
+        
         while current_bar <= (start_bar + num_bars) and steps < max_steps:
             outputs = self.model(prompt)
             
