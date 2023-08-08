@@ -1,13 +1,67 @@
 # musicllm
 Attempt at creating a transformer capable of symbolic music generation. Focussing on creating a single drum track, piano (or keys equivalent) track and a bass.
 
+## Examples of Generated MIDI Files
+Showcasing some of my favourites! You'll notice that they tend to 'forget' or 'lose context' after a while but this is still really cool nonetheless.
+
+I used a few Kontakt libraries for the sounds: Studio Drummer (drums), Mark II Classic (bass) and Alicia Keys (piano). I slapped on some reverb and delay, and did some slight EQ-ing with the MH Channelstrip. I then ran everything through a mix buss chain and brought the volume up with Waves L2.
+
+
+
+### Inference from Scratch
+All generated samples were imported into a 120 BPM session.
+
+**Example 1**
+
+<audio src="fav_samples/fromscratch1.mp3" controls title="Title"></audio>
+
+**Example 2**
+
+<audio src="fav_samples/fromscratch2.mp3" controls title="Title"></audio>
+
+**Example 3**
+
+<audio src="fav_samples/fromscratch3.mp3" controls title="Title"></audio>
+
+
+### Inference with Prompt
+I've noticed that these don't seem to perform as well, with the model often repeating what was before. The coherence of what is generated is also inconsistent. Samples are generated based on (around) the original BPMs of their respective prompts. I suspect that prompts with that are more repetitive (and perhaps less rhythmically and melodically diverse) may lend itself to more coherent inferences.
+
+**Example 1 ('Concrete Jungle Island Life' by Shiv & Jason)**
+
+An example of the model not working very well.
+
+*Prompt*
+
+<audio src="fav_samples/prompt1.mp3" controls title="Title"></audio>
+
+*Generated*
+
+<audio src="fav_samples/prompt1_gen.mp3" controls title="Title"></audio>
+
+The model starts off repeating some of the previous riff before descending into madness!
+
+**Example 2 ('Live Again' by MBI and Jason - unreleased)**
+
+A good example of the model working nicely
+
+*Prompt*
+
+<audio src="fav_samples/prompt2.mp3" controls title="Title"></audio>
+
+*Generated*
+
+<audio src="fav_samples/prompt2_gen.mp3" controls title="Title"></audio>
+
+I like what it did here!
+
 ## Quickstart
 See 'samples' folder for examples of generated samples from scratch.
 
 After creating a virtual environment, cloning the repo, and installing dependencies from `requirements.txt`, do the following:
 
 ### Download Model
-Download the model here and unzip into the working directory
+Download the pooled embedding model <a href="https://drive.google.com/file/d/18s_Es63QMqT9htQZ1FpUQvFGmPjdUj1L/view?usp=sharing">here</a> and unzip into the working directory
 * This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
 * Unfortunately the model's object name is called 'Transformer3' as I had experimented quite a few iterations beforehand
 
@@ -18,7 +72,7 @@ You can either follow the below instructions or import the functions within the 
 python generate.py -mp <path/to/model.pth> -o <generated/samples/directory> -n <num_samples_to_generate> --genconfig <path/to/genconfig.json>
 ~~~
   You can create your own generation configurations in a .json file and specify its path using `--genconfig`
-  
+
 ### Inference using Prompt
 **Merge your drums, bass and piano .mid files.**
 
@@ -58,7 +112,7 @@ python generate.py -p <path/to/prompt.json> -pi <prompt_idx> -mp <path/to/model.
   You can create your own generation configurations in a .json file and specify its path using `--genconfig`
 
 
-## Inspiration
+## Motivation
 Like many other music producers, I also struggle with writer's block. However, in the age of LLMs, I wanted to see if I could leverage generative AI to create ideas that might spark inspiration. In particular, I wanted to make something that was relatively lightweight, and had the ability to generate what are generally considered core 'parts' of a musical idea (e.g. the beat, bass, and a instrument that occupies the midrange / 'cushions' a vocal). Finally, I wanted the generated sample to be importable as stems.
 
 Currently music transformers can either generate symbolically (e.g. generate MIDI sequences) or audio files. I believe symbolic music generation offers the following advantages:
@@ -68,13 +122,14 @@ Currently music transformers can either generate symbolically (e.g. generate MID
 * We can more easily represent MIDI data as words in the English dictionary. Given that the popular use case of LLMs are to do with language generation in one way or another (e.g. GPT, BERT...), one might naturally hypothesise that we could pivot slightly to train transformers on linguistic representations of music.
 
 ## Tokenization Methodology
-Various different tokenization methodologies for MIDI exist, which can be summarised in the MidiTok library (https://miditok.readthedocs.io/en/latest/tokenizations.html).
+Various different tokenization methodologies for MIDI exist, which can be summarised in the <a href="https://miditok.readthedocs.io/en/latest/tokenizations.html">MidiTok library</a>.
 
 I decided to opt for a pooled embedding, drawing inspiration from MMT (Dong et al., 2022) and CP Word (Hsiao et al., 2021) in particular. However, I simplify the vocab list, stripping away 'nice-to-have' information such as:
 * **Velocity:** i.e. how 'hard' a note is hit - if desired, the end user can alter velocity if humanisation is desired; DAWs such as Ableton allow for randomising velocity or introducing 'groove' to humanise MIDI tracks
 * Any other attributes (beyond note duration) that describe how a note is played such as **after-touch** and **pitch bend** - these can be later controlled by the end user if desired
 * **Time signature:** as we are keeping to 4/4 time
-* **Any pieces with a ticks-per-beat not divisible by 8** - it just makes it harder for my tokenizer to tokenizer and decode and I'm too lazy to try and solve for it :joy:
+* **BPM:** possibly a debatable one but I felt that this was something the end user can ultimately adjust to taste; adding this might lead to increased complication such as double time
+* **Any pieces with a ticks-per-beat not divisible by 8** - it just makes it harder for my tokenizer to tokenize and decode and I'm too lazy to try and solve for it :joy:
 
 Essentially each token comprises an array with the following 'token families':
 
@@ -104,8 +159,8 @@ The following datasets have been used, totalling around 11,000 songs:
 ### My own dataset
 A bunch of my own songs for fun!
 
-### Lakh MIDI Dataset
-The Lakh MIDI Dataset (Raffel, 2016) has been cleaned in the following ways:
+### Lakh MIDI Dataset (LMD-matched)
+The <a href="https://colinraffel.com/projects/lmd/#get">Lakh MIDI Dataset (Raffel, 2016)</a> has been cleaned in the following ways:
 * Removed songs without 4/4 time
 * Removed songs with no drums
 * Stripped midi such that there are only:
@@ -126,9 +181,11 @@ I use 12 transformer decoder blocks, each with 8 attention heads. Each token fam
 
 Each embedding layer is then concatenated and linearly projected to layer with a *d_model* of 512. Absolute positional encodings (Vaswani et al., 2017) are added here. Once data is passed through the transformer blocks, they are then linearly projected back to the four separate token families. Each output per token therefore comprises four logits.
 
-All input sequences have been trimmed to a sequence length of 512.
+All input sequences have been trimmed to a sequence length of 512
 
 Loss is computed as an average cross entropy loss across the four token families (following Hsiao et al., 2021).
+
+I use 90% of the dataset for training. I use a batch size of 12, learning rate of 0.5e-4 and trained the model for 22 epochs.
 
 ![Transformer Architecture](assets/architecture.png)
 
@@ -137,14 +194,17 @@ See samples folder for my favourites! These are all inferences from scratch.
 
 ## Instructions
 ### Training
-Download the Lakh dataset and save into working directory:
+Download the <a href="https://drive.google.com/file/d/1lndqMBv1HTiTN0tZBNRYxZ46gKnLsdBe/view?usp=sharing">Lakh dataset</a> and save into working directory:
 Note I have removed my own songs from this dataset - sorry!
 
 #### Tokenize
+Tokenize the .mid files.
 ~~~
 python tokenizer.py -p -td <output/directory/for/tokens> <path/to/.mid/files (or folder containing .mid files)>
 ~~~
-But if you wish to use it in a separate .py file, simply import and call the Tokenizer:
+Alternatively download the tokenized .json files <a href="https://drive.google.com/file/d/1JfK1jL_C_NDzg-Pu5VtA2eA_3QBdjimz/view?usp=sharing">here</a> (note only pooled embedding tokenization currently available)
+
+If you wish to use my tokenizer in a separate .py file, simply import and call the desired MidiTokenizerBase object:
 ~~~python
 from tokenizer import MidiTokenizerPooled
 
@@ -153,8 +213,9 @@ tokens = tokenizer("my_midi.mid")
 print(tokens)
 ~~~
 #### Prepare Dataset
+We will create a Dataset object and save this locally for future reloading. Rather simplicistically, this creates a PyTorch tensor of N x block_size dimensions, with the last row deleted if not filled up (i.e. there is basically no padding involved).
 ~~~
-TODO
+python prepare.py <output_filename.pt> -b <block_size> -fp <path/to/tokens/folder>
 ~~~
 #### Train
 ~~~
@@ -164,15 +225,22 @@ TODO
 ### Generate
 See 'Quickstart' above
 
+## Next Steps
+I have several ideas on where to take this project forward:
+1. Retry training without pooled embeddings using Transformer-XL (which could provide for attention towards wider context length)
+2. Try using Transformer-XL with the pooled embeddings (this would be a stretch goal)
+3. Recreate the model but have more instrument groups, e.g. drums, percussion, bass, piano, synth leads, synth pads, guitars
+4. Retrain the model using crowdsourced music - anyone want to contribute? :grin: (Send me a DM)
+
 ## License / Attribution
 The Lakh MIDI Dataset which was used to train this model is distributed with a CC-BY 4.0 license. Find out more via: https://creativecommons.org/licenses/by/4.0/ and https://colinraffel.com/projects/lmd/#license. Please seek legal advice if you wish to use this for commercial use - I will not be held responsible for any infringements or legal liabilities that may arise due to your use of the model or its underlying dataset.
 
 ## Acknowledgments
-Dong et al., 2022 and Hsiao et al., 2021 for easily the idea and (relatively) easily understandable code!
+<a href="https://github.com/salu133445/mmt/tree/main">Dong et al., 2022</a> and <a href="https://github.com/YatingMusic/compound-word-transformer/tree/main">Hsiao et al., 2021</a> for easily the idea and (relatively) easily understandable code!
 
-YatingMusic for the amazing `miditoolkit` library
+<a href="https://github.com/YatingMusic">YatingMusic</a> for the amazing `miditoolkit` library
 
-lucidrains for the `x-transformers` library
+<a href="https://github.com/lucidrains">lucidrains</a> for the `x-transformers` library
 
 ## References
 **Dong, H.-W., Chen, K., Dubnov, S., McAuley, J., & Berg-Kirkpatrick, T. (2022).** Multitrack Music Transformer: Learning Long-Term Dependencies in Music with Diverse Instruments. ArXiv:2207.06983 [Cs, Eess]. https://arxiv.org/abs/2207.06983
@@ -181,6 +249,6 @@ lucidrains for the `x-transformers` library
 
 **Huang, Y.-S., & Yang, Y.-H. (2020). Pop Music Transformer.** Proceedings of the 28th ACM International Conference on Multimedia. https://doi.org/10.1145/3394171.3413671
 
-**Colin, R. (2016)** "Learning-Based Methods for Comparing Sequences, with Applications to Audio-to-MIDI Alignment and Matching". PhD Thesis. https://colinraffel.com/publications/thesis.pdf
+**Raffel, C. (2016)** "Learning-Based Methods for Comparing Sequences, with Applications to Audio-to-MIDI Alignment and Matching". PhD Thesis. https://colinraffel.com/publications/thesis.pdf
 
 **Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polosukhin, I. (2017).** Attention Is All You Need. ArXiv.org. https://arxiv.org/abs/1706.03762

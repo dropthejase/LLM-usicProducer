@@ -481,6 +481,8 @@ def tokenize_dataset(tokenizer: MidiTokenizerBase, tokens_folder: Union[str,Path
                     print(f"Skipped: {i.stem} due to {e}")
                     continue
     
+    with open(f"{tokens_folder}/logs.txt", "a") as f:
+        f.write(f"Total Songs: {list(tokens_folder.glob('*.json')).__len__()}")
     print(f"Total Songs: {list(tokens_folder.glob('*.json')).__len__()}")
 
 

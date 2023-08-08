@@ -43,7 +43,8 @@ def generate_sample(json_file: Union[str,Path],
     prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, num_token_families).to(device)
 
     print("Prompt Size: ", prompt.size())
-    print("Prompt from idx: ", prompt_idx)
+    print("Start generating from idx: ", prompt_idx)
+    print(prompt)
 
     gen = model.generate(prompt, **kwargs)
 
@@ -63,7 +64,7 @@ def generate_sample(json_file: Union[str,Path],
     return gen
 
 
-def main():
+if __name__ == "__main__":
 
     usage =\
         """
@@ -126,7 +127,7 @@ def main():
     genconfig = {
             "temperature": TEMPERATURE, 
             "num_bars": 8,
-            "max_steps": 512,
+            "max_steps": 256,
             "sampling_fn": "top_k",
             "threshold": THRESHOLD,
         }
@@ -164,8 +165,3 @@ def main():
                         out_dir=f"{args.out_dir}/{i}.mid",
                         save_prompt_separately=args.save_prompt,
                         **genconfig)
-
-
-if __name__ == "__main__":
-
-    main()

@@ -4,6 +4,7 @@ from x_transformers.autoregressive_wrapper import top_k, top_p
 import json
 import math
 import numpy as np
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -245,6 +246,10 @@ class MusicTransformer3(nn.Module):
         steps = 0
         start_bar = current_bar
         
+        # progress bar
+        step_pbar = tqdm(total=max_steps, desc="Step count")
+        bar_pbar = tqdm(total=num_bars, desc="Bars generated")
+
         while current_bar <= (start_bar + num_bars) and steps < max_steps:
             outputs = self.model(prompt)
             
@@ -274,6 +279,7 @@ class MusicTransformer3(nn.Module):
             # update bar_count (goes from token_id 4 onwards)
             if (sample_bar.item() - current_bar) > 0:
                 current_bar += 1
+                bar_pbar.update(1)
 
             # concat 5 x 1D LongTensor -> (1, 1, 5)
             pred_ids = torch.concat([
@@ -286,6 +292,7 @@ class MusicTransformer3(nn.Module):
             prompt = torch.hstack((prompt, pred_ids))
 
             steps += 1
+            step_pbar.update(1)
 
         return prompt
 
