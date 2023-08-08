@@ -13,7 +13,7 @@ All generated samples were imported into a 120 BPM session.
 
 **Example 1**
 
-<audio src="fav_samples/fromscratch1.mp3" controls title="Title"></audio>
+<audio src="fav_samples/fromscratch1.mp3" controls title="Title">yo</audio>
 
 <iframe frameborder="0" width="400" height="200" src="https://drive.google.com/file/d/1XgV4V2lLd9CBxeNzapht0F1VNzrfh-t_/view?usp=sharing">Hello</iframe>
 
