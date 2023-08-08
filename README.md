@@ -18,7 +18,8 @@ You can either follow the below instructions or import the functions within the 
 TODO
 ~~~
 ### Inference using Prompt
-Merge your drums, bass and piano .mid files.
+**Merge your drums, bass and piano .mid files.**
+
 **Important:** Please make sure your .mid files adhere to the following:
 * You should have up to three individual *single track* .mid files. They must be named either 'drums.mid', 'bass.mid' or 'piano.mid'. You don't have to have all three parts - for example, your prompt might only comprise a bass and piano.
 * Your drum instruments should conform to the GM1 Sound Set (see https://www.midi.org/specifications-old/item/gm-level-1-sound-set). For example your kick should be either pitch35 or pitch36.
@@ -26,11 +27,11 @@ Merge your drums, bass and piano .mid files.
 ~~~
 python merge_midi <output director for resulting merged .mid file> <path/to/drums.mid> <path/to/bass.mid> <path/to/piano.mid> -n <merged_filename.mid>
 ~~~
-Tokenize the .mid file(s)
+**Tokenize the .mid file(s)**
 ~~~
 python -p -td tokenizer.py <output directory for tokens folder containing .json files> <path to .mid files (or folder containing .mid files)>
 ~~~
-Generate
+**Generate**
 ~~~
 TODO
 ~~~
@@ -119,7 +120,7 @@ Note I have removed my own songs from this dataset - sorry!
 
 #### Tokenize
 ~~~
-TODO
+python -p -td tokenizer.py <output directory for tokens folder containing .json files> <path to .mid files (or folder containing .mid files)>
 ~~~
 #### Prepare Dataset
 ~~~
