@@ -158,6 +158,11 @@ TODO
 ### Generate
 See 'Quickstart' above
 
+## License / Attribution
+https://colinraffel.com/projects/lmd/#license
+https://creativecommons.org/licenses/by/4.0/
+
+
 ## Acknowledgments
 Dong et al., 2022 and Hsiao et al., 2021 for easily the idea and (relatively) easily understandable code!
 
