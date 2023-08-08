@@ -15,8 +15,10 @@ You can either follow the below instructions or import the functions within the 
 
 ### Inference from Scratch
 ~~~
-TODO
+python generate.py -mp <path/to/model.pth> -o <generated/samples/directory> -n <num_samples_to_generate> --genconfig <path/to/genconfig.json>
 ~~~
+  You can create your own generation configurations in a .json file and specify its path using `--genconfig`
+  
 ### Inference using Prompt
 **Merge your drums, bass and piano .mid files.**
 
@@ -49,8 +51,12 @@ print(tokens)
 ~~~
 **Generate**
 ~~~
-TODO
+python generate.py -p <path/to/prompt.json> -pi <prompt_idx> -mp <path/to/model.pth> -o <generated/samples/directory> -n <num_samples_to_generate> --genconfig <path/to/genconfig.json>
 ~~~
+  Use the `-p` option to specify the path to the tokenized prompt.json file
+  You can use `-pi` to truncate your prompt (e.g. if you only want to use the first 50 tokens of a tokenized song)
+  You can create your own generation configurations in a .json file and specify its path using `--genconfig`
+
 
 ## Inspiration
 Like many other music producers, I also struggle with writer's block. However, in the age of LLMs, I wanted to see if I could leverage generative AI to create ideas that might spark inspiration. In particular, I wanted to make something that was relatively lightweight, and had the ability to generate what are generally considered core 'parts' of a musical idea (e.g. the beat, bass, and a instrument that occupies the midrange / 'cushions' a vocal). Finally, I wanted the generated sample to be importable as stems.
