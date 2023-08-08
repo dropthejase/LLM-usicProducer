@@ -25,11 +25,27 @@ TODO
 * Your drum instruments should conform to the GM1 Sound Set (see https://www.midi.org/specifications-old/item/gm-level-1-sound-set). For example your kick should be either pitch35 or pitch36.
 * Ticks per beat should be the same for all .mid files
 ~~~
-python merge_midi <output director for resulting merged .mid file> <path/to/drums.mid> <path/to/bass.mid> <path/to/piano.mid> -n <merged_filename.mid>
+python merge_midi.py <output directory for merged .mid file> <path/to/drums.mid> <path/to/bass.mid> <path/to/piano.mid> -n <merged_filename.mid>
+~~~
+Example:
+~~~
+python merge_midi.py test/merge_midi test/merge_midi/drums.mid test/merge_midi/bass.mid test/merge_midi/piano.mid -n mergedfile.mid
 ~~~
 **Tokenize the .mid file(s)**
 ~~~
-python -p -td tokenizer.py <output directory for tokens folder containing .json files> <path to .mid files (or folder containing .mid files)>
+python tokenizer.py -p -td <output directory for tokens folder containing .json files> <path to .mid files (or folder containing .mid files)>
+~~~
+Example
+~~~
+python tokenizer.py -p -td tokens_output dataset
+~~~
+But if you wish to use it in a separate .py file, simply import and call the Tokenizer:
+~~~
+from tokenizer import MidiTokenizerPooled
+
+tokenizer = MidiTokenizerPooled()
+tokens = tokenizer(<.mid file>)
+print(tokens)
 ~~~
 **Generate**
 ~~~
