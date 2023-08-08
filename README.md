@@ -6,56 +6,27 @@ Showcasing some of my favourites! You'll notice that they tend to 'forget' or 'l
 
 I used a few Kontakt libraries for the sounds: Studio Drummer (drums), Mark II Classic (bass) and Alicia Keys (piano). I slapped on some reverb and delay, and did some slight EQ-ing with the MH Channelstrip. I then ran everything through a mix buss chain and brought the volume up with Waves L2.
 
-
+You can find them in the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder
 
 ### Inference from Scratch
-All generated samples were imported into a 120 BPM session.
-
-**Example 1**
-
-<audio src="fav_samples/fromscratch1.mp3" controls title="Title">yo</audio>
-
-<iframe frameborder="0" width="400" height="200" src="https://drive.google.com/file/d/1XgV4V2lLd9CBxeNzapht0F1VNzrfh-t_/view?usp=sharing">Hello</iframe>
-
-**Example 2**
-
-<audio src="fav_samples/fromscratch2.mp3" controls title="Title"></audio>
-
-**Example 3**
-
-<audio src="fav_samples/fromscratch3.mp3" controls title="Title"></audio>
-
+See the 'fromscratch' MP3 files in the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder.
 
 ### Inference with Prompt
+(Again, refer to the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder)
+
 I've noticed that these don't seem to perform as well, with the model often repeating what was before. The coherence of what is generated is also inconsistent. Samples are generated based on (around) the original BPMs of their respective prompts. I suspect that prompts with that are more repetitive (and perhaps less rhythmically and melodically diverse) may lend itself to more coherent inferences.
+
 
 **Example 1 ('Concrete Jungle Island Life' by Shiv & Jason)**
 
 An example of the model not working very well.
-
-*Prompt*
-
-<audio src="fav_samples/prompt1.mp3" controls title="Title"></audio>
-
-*Generated*
-
-<audio src="fav_samples/prompt1_gen.mp3" controls title="Title"></audio>
-
 The model starts off repeating some of the previous riff before descending into madness!
 
 **Example 2 ('Live Again' by MBI and Jason - unreleased)**
 
 A good example of the model working nicely
 
-*Prompt*
 
-<audio src="fav_samples/prompt2.mp3" controls title="Title"></audio>
-
-*Generated*
-
-<audio src="fav_samples/prompt2_gen.mp3" controls title="Title"></audio>
-
-I like what it did here!
 
 ## Quickstart
 See 'samples' folder for examples of generated samples from scratch.
