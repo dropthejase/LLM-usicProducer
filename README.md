@@ -33,18 +33,18 @@ python merge_midi.py test/merge_midi test/merge_midi/drums.mid test/merge_midi/b
 ~~~
 **Tokenize the .mid file(s)**
 ~~~
-python tokenizer.py -p -td <output directory for tokens folder containing .json files> <path to .mid files (or folder containing .mid files)>
+python tokenizer.py -p -td <output/directory/for/tokens> <path/to/.mid/files (or folder containing .mid files)>
 ~~~
 Example
 ~~~
 python tokenizer.py -p -td tokens_output dataset
 ~~~
 But if you wish to use it in a separate .py file, simply import and call the Tokenizer:
-~~~
+~~~python
 from tokenizer import MidiTokenizerPooled
 
 tokenizer = MidiTokenizerPooled()
-tokens = tokenizer(<.mid file>)
+tokens = tokenizer("my_midi.mid")
 print(tokens)
 ~~~
 **Generate**
@@ -136,7 +136,15 @@ Note I have removed my own songs from this dataset - sorry!
 
 #### Tokenize
 ~~~
-python -p -td tokenizer.py <output directory for tokens folder containing .json files> <path to .mid files (or folder containing .mid files)>
+python tokenizer.py -p -td <output/directory/for/tokens> <path/to/.mid/files (or folder containing .mid files)>
+~~~
+But if you wish to use it in a separate .py file, simply import and call the Tokenizer:
+~~~python
+from tokenizer import MidiTokenizerPooled
+
+tokenizer = MidiTokenizerPooled()
+tokens = tokenizer("my_midi.mid")
+print(tokens)
 ~~~
 #### Prepare Dataset
 ~~~
