@@ -14,6 +14,7 @@ All generated samples were imported into a 120 BPM session.
 **Example 1**
 
 <audio src="fav_samples/fromscratch1.mp3" controls title="Title"></audio>
+<audio src="https://github.com/dropthejase/musicllm/blob/main/fav_samples/fromscratch1.mp3" controls title="Title"></audio>
 
 **Example 2**
 
