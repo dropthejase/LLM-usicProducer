@@ -2,27 +2,40 @@
 Attempt at creating a transformer capable of symbolic music generation. Focussing on creating a single drum track, piano (or keys equivalent) track and a bass.
 
 ## Contents
-[Examples of Generated MIDI Files](https://github.com/dropthejase/LLM-usicProducer#examples-of-generated-midi-files)
+[**Examples of Generated MIDI Files**](https://github.com/dropthejase/LLM-usicProducer#examples-of-generated-midi-files)
 
-### [Quickstart](https://github.com/dropthejase/LLM-usicProducer#quickstart)
+  &ensp; &ensp; [Inference from Scratch](https://github.com/dropthejase/LLM-usicProducer#inference-from-scratch)
 
-[Motivation](https://github.com/dropthejase/LLM-usicProducer#motivation)
+  &ensp; &ensp; [Inference with Prompt](https://github.com/dropthejase/LLM-usicProducer#inference-with-prompt)
 
-[Tokenization Methodology](https://github.com/dropthejase/LLM-usicProducer#tokenization-methodology)
+[**Quickstart**](https://github.com/dropthejase/LLM-usicProducer#quickstart)
 
-[Data](https://github.com/dropthejase/LLM-usicProducer#data)
+  &ensp; &ensp; [Download Model](https://github.com/dropthejase/LLM-usicProducer#download-model)
 
-[Transformer Setup](https://github.com/dropthejase/LLM-usicProducer#transformer-setup)
+  &ensp; &ensp; [Inference from Scratch](https://github.com/dropthejase/LLM-usicProducer#inference-from-scratch-1)
 
-[Instructions](https://github.com/dropthejase/LLM-usicProducer#instructions)
+  &ensp; &ensp; [Inference with Prompt](https://github.com/dropthejase/LLM-usicProducer#inference-with-prompt-1)
 
-[Next Steps](https://github.com/dropthejase/LLM-usicProducer#next-steps)
 
-[License / Attribution](https://github.com/dropthejase/LLM-usicProducer#license--attribution)
+[**Motivation**](https://github.com/dropthejase/LLM-usicProducer#motivation)
 
-[Acknowledgements](https://github.com/dropthejase/LLM-usicProducer#acknowledgements)
+[**Tokenization Methodology**](https://github.com/dropthejase/LLM-usicProducer#tokenization-methodology)
 
-[References](https://github.com/dropthejase/LLM-usicProducer#references)
+  &ensp; &ensp; [Why use pooled embeddings?](https://github.com/dropthejase/LLM-usicProducer#why-use-pooled-embeddings)
+
+[**Data**](https://github.com/dropthejase/LLM-usicProducer#data)
+
+[**Transformer Setup**](https://github.com/dropthejase/LLM-usicProducer#transformer-setup)
+
+[**Instructions**](https://github.com/dropthejase/LLM-usicProducer#instructions)
+
+[**Next Steps**](https://github.com/dropthejase/LLM-usicProducer#next-steps)
+
+[**License / Attribution**](https://github.com/dropthejase/LLM-usicProducer#license--attribution)
+
+[**Acknowledgements**](https://github.com/dropthejase/LLM-usicProducer#acknowledgements)
+
+[**References**](https://github.com/dropthejase/LLM-usicProducer#references)
 
 
 
@@ -75,7 +88,7 @@ python generate.py -mp <path/to/model.pth> -o <generated/samples/directory> -n <
 ~~~
   You can create your own generation configurations in a .json file and specify its path using `--genconfig`
 
-### Inference using Prompt
+### Inference with Prompt
 **Merge your drums, bass and piano .mid files.**
 
 **Important:** Please make sure your .mid files adhere to the following:
