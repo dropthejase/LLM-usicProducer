@@ -4,7 +4,7 @@ Attempt at creating a transformer capable of symbolic music generation. Focussin
 ## Contents
 [Examples of Generated MIDI Files](https://github.com/dropthejase/LLM-usicProducer#examples-of-generated-midi-files)
 
-[Quickstart](https://github.com/dropthejase/LLM-usicProducer#quickstart)
+### [Quickstart](https://github.com/dropthejase/LLM-usicProducer#quickstart)
 
 [Motivation](https://github.com/dropthejase/LLM-usicProducer#motivation)
 
