@@ -2,17 +2,27 @@
 Attempt at creating a transformer capable of symbolic music generation. Focussing on creating a single drum track, piano (or keys equivalent) track and a bass.
 
 ## Contents
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#examples-of-generated-midi-files">Examples of Generated MIDI Files</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#quickstart">Quickstart</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#motivation">Motivation</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#tokenization-methodology">Tokenization Methodology</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#data">Data</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#transformer-setup">Transformer Setup</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#transformer-setup">Instructions</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#next-steps">Next Steps</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#license--attribution">License / Attribution</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#license--attribution">Acknowledgements</a>
-#### <a href="https://github.com/dropthejase/LLM-usicProducer#references">References</a>
+[Examples of Generated MIDI Files](https://github.com/dropthejase/LLM-usicProducer#examples-of-generated-midi-files)
+
+[Quickstart](https://github.com/dropthejase/LLM-usicProducer#quickstart)
+
+[Motivation](https://github.com/dropthejase/LLM-usicProducer#motivation)
+
+[Tokenization Methodology](https://github.com/dropthejase/LLM-usicProducer#tokenization-methodology)
+
+[Data](https://github.com/dropthejase/LLM-usicProducer#data)
+
+[Transformer Setup](https://github.com/dropthejase/LLM-usicProducer#transformer-setup)
+
+[Instructions](https://github.com/dropthejase/LLM-usicProducer#instructions)
+
+[Next Steps](https://github.com/dropthejase/LLM-usicProducer#next-steps)
+
+[License / Attribution](https://github.com/dropthejase/LLM-usicProducer#license--attribution)
+
+[Acknowledgements](https://github.com/dropthejase/LLM-usicProducer#acknowledgements)
+
+[References](https://github.com/dropthejase/LLM-usicProducer#references)
 
 
 
