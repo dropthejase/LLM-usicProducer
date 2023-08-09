@@ -1,6 +1,21 @@
 # LLM-usicProducer
 Attempt at creating a transformer capable of symbolic music generation. Focussing on creating a single drum track, piano (or keys equivalent) track and a bass.
 
+## Contents
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#examples-of-generated-midi-files">Examples of Generated MIDI Files</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#quickstart">Quickstart</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#motivation">Motivation</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#tokenization-methodology">Tokenization Methodology</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#data">Data</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#transformer-setup">Transformer Setup</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#transformer-setup">Instructions</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#next-steps">Next Steps</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#license--attribution">License / Attribution</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#license--attribution">Acknowledgements</a>
+#### <a href="https://github.com/dropthejase/LLM-usicProducer#references">References</a>
+
+
+
 ## Examples of Generated MIDI Files
 Showcasing some of my favourites! You'll notice that they tend to 'forget' or 'lose context' after a while but this is still really cool nonetheless.
 
@@ -166,8 +181,6 @@ I use 90% of the dataset for training. I use a batch size of 12, learning rate o
 
 ![Transformer Architecture](assets/architecture.png)
 
-## Generated Samples
-See samples folder for my favourites! These are all inferences from scratch.
 
 ## Instructions
 ### Training
