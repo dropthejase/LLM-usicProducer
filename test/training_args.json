@@ -1,0 +1,7 @@
+{
+    "batch_size": 12,
+    "num_epochs": 1,
+    "lr": 5e-4,
+    "filename": "musictransformerTEST222",
+    "loggingsteps": 20000
+}

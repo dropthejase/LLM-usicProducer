@@ -1,9 +1,12 @@
-from tokenizer import MidiTokenizerPooled
+from tokenizer import MidiTokenizerPooled, MidiTokenizerNoPool
 from prepare import MIDIDataset
 from musictransformer import MusicTransformer3
 
-from tqdm import tqdm
+
+import argparse
+import csv
 from pathlib import Path
+from tqdm import tqdm
 from typing import Union
 
 import json
@@ -27,15 +30,13 @@ def print_trainable_parameters(model):
         f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param:.2f}"
     )
 
+    return trainable_params, all_param
+
 
 def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggingsteps=1000):
     """
     x: a Dataset object comprising training dataset
     """
-
-    # print num parameters
-    print_trainable_parameters(model)
-
     # make folder
     if not isinstance(filename,Path):
         filename = Path(filename)
@@ -44,6 +45,22 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
     
     # save hyperparameters
     model.save_params(f"{filename}/hyperparameters.json")
+
+    # add num_parameters to hyperparameters
+    with open(f"{filename}/hyperparameters.json") as jsonfile:
+        hyperparams = json.load(jsonfile)
+    
+    trainable_params, all_params = print_trainable_parameters(model)
+    hyperparams["trainable parameters"] = trainable_params
+    hyperparams["all parameters"] = all_params
+    
+    with open(f"{filename}/hyperparameters.json", "w") as jsonfile:
+        json.dump(hyperparams, jsonfile)
+
+    # prepare train_losses.csv
+    with open(f"{filename}/train_losses.csv", "a") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['steps', 'train_loss'])
+        writer.writeheader()
 
     # loss and optimizer
     criterion = torch.nn.CrossEntropyLoss()
@@ -80,6 +97,11 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
             if steps % loggingsteps == 0:
                 print(f"Step: {steps}, Train Loss: {loss.item():.4f}")
                 torch.save(model, f"{filename}/{filename}-checkpoint-{epoch}-{steps}.pth")
+
+                # log to csv
+                with open(f"{filename}/train_losses.csv", "a") as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=['steps', 'train_loss'])
+                    writer.writerow({'steps': steps, 'train_loss': loss.item()})
                 
             steps += batch_size
 
@@ -118,32 +140,78 @@ def main():
 
 
 if __name__ == "__main__":
-    tokenizer = MidiTokenizerPooled() # CHANGE IF REQUIRED
+
+    argsparser = argparse.ArgumentParser("Trainer", description="To train the model", usage="TODO")
+    argsparser.add_argument("-t", "--tokenizer", choices=["pooled", "nopool"], default="pooled", help="Choose between 'pooled' (MidiTokenizerPooled) or 'nopool' (MidiTokenizerNoPool) (default: pooled)")
+    argsparser.add_argument("-fp", "--from_pretrained", help="Path to pretrained model or checkpoint .pth file")
+    argsparser.add_argument("--dataset_path", default="dataset_pitch_ins512.pt", help="Path to Dataset Object .pt file (default: dataset_pitch_ins512.pt)")
+    argsparser.add_argument("--train_split", type=float, default=0.9, help="Train split (default: 0.9)")
+    argsparser.add_argument("-d", "--device", choices=["cpu", "cuda", "mps"], default="mps", help="Choose torch.device")
+
+    # model configs
+    argsparser.add_argument("--model_config", help="Path to model_config.json file if exists or applicable")
+
+    # training configs
+    argsparser.add_argument("--training_args", help="Path to training_args.json file if exists or applicable")
+
+    args = argsparser.parse_args()
+    print(vars(args))
+
+    if args.tokenizer == "nopool":
+        tokenizer = MidiTokenizerNoPool()
+    else:
+        tokenizer = MidiTokenizerPooled()
 
     # load Dataset
-    dataset = MIDIDataset(load_path="dataset_pitch_ins512.pt") # CHANGE IF REQUIRED
+    dataset = MIDIDataset(load_path=args.dataset_path)
     print("Dataset size: ", dataset.samples.size())
     
     # split data
-    train_dataset, eval_dataset = random_split(dataset, [0.9, 0.1])
+    train_dataset, eval_dataset = random_split(dataset, [args.train_split, 1 - args.train_split])
 
-    # create model
-    model = MusicTransformer3(
-        n_tokens=tokenizer.vocab["n_tokens"],
-        emb_sizes=[512, 128, 256, 512],
-        emb_pooling="concat",
-        n_layers=12,
-        n_heads=8,
-        d_model=512,
-        dropout=0.1)
+    if args.from_pretrained:
+        # load model
+        model = torch.load(args.from_pretrained)
+    
+    else:
+        model_config = {"emb_sizes": [512, 128, 256, 512],
+                "emb_pooling": "concat",
+                "n_layers": 12,
+                "n_heads": 8,
+                "d_model": 512,
+                "dropout": 0.1
+        }
+        
+        if args.model_config:
+            with open(args.model_config) as jsonfile:
+                config = json.load(jsonfile)
+            for k, v in config.items():
+                model_config[k] = v
+        
+        # create model
+        model = MusicTransformer3(
+            n_tokens=tokenizer.vocab["n_tokens"],
+            **model_config
+        )            
 
-    # ... or load checkpoint
-    model = torch.load("musictransformer/musictransformer-full-22.pth")
-    device = torch.device("mps")
+    device = torch.device(args.device)
     model.to(device)
 
     print("Train Dataset Size: ", len(train_dataset))
-    train(train_dataset, model, batch_size=12, num_epochs=1, lr=5e-4, filename="musictransformerTEST", loggingsteps=20000)
+
+    training_args = {"batch_size": 12,
+                    "num_epochs": 1,
+                    "lr": 5e-4,
+                    "filename": "musictransformerTEST",
+                    "loggingsteps": 20000}
+    
+    if args.training_args:
+        with open(args.training_args) as jsonfile:
+            t_args = json.load(jsonfile)
+        for k, v in t_args.items():
+            training_args[k] = v
+    
+    train(train_dataset, model, **training_args)
 
  
 

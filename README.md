@@ -173,7 +173,7 @@ Note I have removed my own songs from this dataset - sorry!
 #### Tokenize
 Tokenize the .mid files.
 ~~~
-python tokenizer.py -p -td <output/directory/for/tokens> <path/to/.mid/files (or folder containing .mid files)>
+python tokenizer.py -td <output/directory/for/tokens> <path/to/.mid/files (or folder containing .mid files)>
 ~~~
 Alternatively download the tokenized .json files <a href="https://drive.google.com/file/d/1JfK1jL_C_NDzg-Pu5VtA2eA_3QBdjimz/view?usp=sharing">here</a> (note only pooled embedding tokenization currently available)
 
@@ -192,8 +192,13 @@ python prepare.py <output_filename.pt> -b <block_size> -fp <path/to/tokens/folde
 ~~~
 #### Train
 ~~~
-TODO
+python train_pool.py
 ~~~
+* You can specify the model's configurations using `--model_config` and specifying the model_config.json file
+* You can do the same with the training arguments using `--training_args` and specifying the training_args.json file
+* Use `--train_split` followed by a `float` number to specify train split
+* Use `-fp` followed by the path to your .pth model if you wish to load a pretrained model or checkpoint
+
 
 ### Generate
 See 'Quickstart' above

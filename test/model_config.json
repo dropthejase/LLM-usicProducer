@@ -1,0 +1,8 @@
+{
+    "emb_sizes": [512, 512, 512, 512],
+    "emb_pooling": "concat",
+    "n_layers": 12,
+    "n_heads": 8,
+    "d_model": 512,
+    "dropout": 0.1
+}

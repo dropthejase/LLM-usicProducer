@@ -498,7 +498,7 @@ def test_tokenizer(tokenizer: MidiTokenizerBase):
 def main():
 
     argparser = argparse.ArgumentParser(prog="Tokenizer", description="To tokenize MIDI files")
-    argparser.add_argument("-p", "--pooled", action='store_true', required=False, help="If used, will use MidiTokenizerPooled to tokenize dataset, otherwise will use MidiTokenizerNoPool")
+    argparser.add_argument("-np", "--nopool", action='store_true', required=False, help="If used, will NOTuse MidiTokenizerNoPool (no pooled embeddings) to tokenize dataset, otherwise will use MidiTokenizerPooled")
     argparser.add_argument("-td", "--tokenize_dataset", action='store_true', required=False, help="If used, will run tokenize_dataset function")
     argparser.add_argument("tokens_folder", nargs="?", default="tokens", help="Provide an output directory for .json files containing tokenized dataset (default: a folder named 'tokens')")
     argparser.add_argument("midi_files", nargs="*", default="lmd_cleaned2", help="Provide .mid files or folders containing .mid files to tokenize when -td option used (default: 'lmd_cleaned2')")
@@ -508,7 +508,7 @@ def main():
     args = argparser.parse_args()
     print(args)
 
-    if args.pooled:
+    if not args.nopool:
         tokenizer = MidiTokenizerPooled
     else:
         tokenizer = MidiTokenizerNoPool
