@@ -40,6 +40,8 @@ Attempt at creating a transformer capable of symbolic music generation. Focussin
 
 
 ## Examples of Generated MIDI Files
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 Showcasing some of my favourites! You'll notice that they tend to 'forget' or 'lose context' after a while but this is still really cool nonetheless.
 
 I used a few Kontakt libraries for the sounds: Studio Drummer (drums), Mark II Classic (bass) and Alicia Keys (piano). I slapped on some reverb and delay, and did some slight EQ-ing with the MH Channelstrip. I then ran everything through a mix buss chain and brought the volume up with Waves L2.
@@ -67,6 +69,8 @@ A good example of the model working nicely
 
 
 ## Quickstart
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 See 'samples' folder for examples of generated samples from scratch.
 
 After creating a virtual environment, cloning the repo, and installing dependencies from `requirements.txt`, do the following:
@@ -128,6 +132,8 @@ python generate.py -p <path/to/prompt.json> -pi <prompt_idx> -mp <path/to/model.
 
 
 ## Motivation
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 Like many other music producers, I also struggle with writer's block. However, in the age of LLMs, I wanted to see if I could leverage generative AI to create ideas that might spark inspiration. In particular, I wanted to make something that was relatively lightweight, and had the ability to generate what are generally considered core 'parts' of a musical idea (e.g. the beat, bass, and a instrument that occupies the midrange / 'cushions' a vocal). Finally, I wanted the generated sample to be importable as stems.
 
 Currently music transformers can either generate symbolically (e.g. generate MIDI sequences) or audio files. I believe symbolic music generation offers the following advantages:
@@ -137,6 +143,8 @@ Currently music transformers can either generate symbolically (e.g. generate MID
 * We can more easily represent MIDI data as words in the English dictionary. Given that the popular use case of LLMs are to do with language generation in one way or another (e.g. GPT, BERT...), one might naturally hypothesise that we could pivot slightly to train transformers on linguistic representations of music.
 
 ## Tokenization Methodology
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 Various different tokenization methodologies for MIDI exist, which can be summarised in the <a href="https://miditok.readthedocs.io/en/latest/tokenizations.html">MidiTok library</a>.
 
 I decided to opt for a pooled embedding, drawing inspiration from MMT (Dong et al., 2022) and CP Word (Hsiao et al., 2021) in particular. However, I simplify the vocab list, stripping away 'nice-to-have' information such as:
@@ -169,6 +177,8 @@ Pooled embeddings can offer advantages such as much shorter sequence lengths, en
 However, the disadvantage with separating embeddings for each of these  is the inability for associations to be formed across the four token families. These associations can also carry useful information - for example, a kick drum (`pitch35_drum` or `pitch36_drum`) might typically occur on `start_pos`(-itions) corresponding to each quarter note.
 
 ## Data
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 The following datasets have been used, totalling around 11,000 songs:
 
 ### My own dataset
@@ -185,6 +195,8 @@ The <a href="https://colinraffel.com/projects/lmd/#get">Lakh MIDI Dataset (Raffe
 During tokenization, any further songs that create errors are removed. Typically this occurs when the MIDI has a pitch that is outside of the range of pitches available in our vocab list.
 
 ## Transformer Setup
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 I use 12 transformer decoder blocks, each with 8 attention heads. Each token family has a separate embedding layer with different embedding dimensions (similar to Hsiao et al., 2021): 
 
 | Token family | Vocab size | Embedding dimension |
@@ -206,6 +218,8 @@ I use 90% of the dataset for training. I use a batch size of 12, learning rate o
 
 
 ## Instructions
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 ### Training
 Download the <a href="https://drive.google.com/file/d/1lndqMBv1HTiTN0tZBNRYxZ46gKnLsdBe/view?usp=sharing">Lakh dataset</a> and save into working directory:
 Note I have removed my own songs from this dataset - sorry!
@@ -245,6 +259,8 @@ python train_pool.py
 See 'Quickstart' above
 
 ## Next Steps
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 I have several ideas on where to take this project forward:
 1. Retry training without pooled embeddings using Transformer-XL (which could provide for attention towards wider context length)
 2. Try using Transformer-XL with the pooled embeddings (this would be a stretch goal)
@@ -252,9 +268,13 @@ I have several ideas on where to take this project forward:
 4. Retrain the model using crowdsourced music - anyone want to contribute? :grin: (Send me a DM)
 
 ## License / Attribution
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 The Lakh MIDI Dataset which was used to train this model is distributed with a CC-BY 4.0 license. Find out more via: https://creativecommons.org/licenses/by/4.0/ and https://colinraffel.com/projects/lmd/#license. Please seek legal advice if you wish to use this for commercial use - I will not be held responsible for any infringements or legal liabilities that may arise due to your use of the model or its underlying dataset.
 
 ## Acknowledgments
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 <a href="https://github.com/salu133445/mmt/tree/main">Dong et al., 2022</a> and <a href="https://github.com/YatingMusic/compound-word-transformer/tree/main">Hsiao et al., 2021</a> for easily the idea and (relatively) easily understandable code!
 
 <a href="https://github.com/YatingMusic">YatingMusic</a> for the amazing `miditoolkit` library
@@ -262,6 +282,8 @@ The Lakh MIDI Dataset which was used to train this model is distributed with a C
 <a href="https://github.com/lucidrains">lucidrains</a> for the `x-transformers` library
 
 ## References
+[Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
 **Dong, H.-W., Chen, K., Dubnov, S., McAuley, J., & Berg-Kirkpatrick, T. (2022).** Multitrack Music Transformer: Learning Long-Term Dependencies in Music with Diverse Instruments. ArXiv:2207.06983 [Cs, Eess]. https://arxiv.org/abs/2207.06983
 
 **Hsiao, W.-Y., Liu, J.-Y., Yeh, Y.-C., & Yang, Y.-H. (2021).** Compound Word Transformer: Learning to Compose Full-Song Music over Dynamic Directed Hypergraphs. ArXiv:2101.02402 [Cs, Eess]. https://arxiv.org/abs/2101.02402
