@@ -33,6 +33,10 @@ See 'samples' folder for examples of generated samples from scratch.
 
 After creating a virtual environment, cloning the repo, and installing dependencies from `requirements.txt`, do the following:
 
+> **Note** 
+>
+>If you are having issues with `miditoolkit`, navigate to `.venv/lib/python3.10/site-packages/miditoolkit/midi/parser.py` (or your virtual env equivalent) and replace `np.int` with `int` on **line 205**.
+
 ### Download Model
 Download the pooled embedding model <a href="https://drive.google.com/file/d/18s_Es63QMqT9htQZ1FpUQvFGmPjdUj1L/view?usp=sharing">here</a> and unzip into the working directory
 * This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
@@ -194,6 +198,7 @@ python prepare.py <output_filename.pt> -b <block_size> -fp <path/to/tokens/folde
 ~~~
 python train_pool.py
 ~~~
+* Use `--dataset_path <path/to/dataset.pt>` to specify path of Dataset object (by default it will look for 'dataset_pitch_ins512.pt' in your working director)
 * You can specify the model's configurations using `--model_config` and specifying the model_config.json file
 * You can do the same with the training arguments using `--training_args` and specifying the training_args.json file
 * Use `--train_split` followed by a `float` number to specify train split
