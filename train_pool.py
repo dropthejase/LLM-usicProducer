@@ -109,36 +109,6 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
         torch.save(model, f"{filename}/{filename}-full-{epoch}.pth")
 
 
-def main():
-
-    tokenizer = MidiTokenizerPooled() # CHANGE IF REQUIRED
-
-    # load Dataset
-    dataset = MIDIDataset(load_path="dataset_pitch_ins512.pt") # CHANGE IF REQUIRED
-    print("Dataset size: ", dataset.samples.size())
-    
-    # split data
-    train_dataset, eval_dataset = random_split(dataset, [0.9, 0.1])
-
-    # create model
-    model = MusicTransformer3(
-        n_tokens=tokenizer.vocab["n_tokens"],
-        emb_sizes=[512, 128, 256, 512],
-        emb_pooling="concat",
-        n_layers=12,
-        n_heads=8,
-        d_model=512,
-        dropout=0.1)
-
-    # ... or load checkpoint
-    model = torch.load("musictransformer/musictransformer-full-22.pth")
-    device = torch.device("mps")
-    model.to(device)
-
-    print("Train Dataset Size: ", len(train_dataset))
-    train(train_dataset, model, batch_size=12, num_epochs=1, lr=5e-4, filename="musictransformerTEST", loggingsteps=20000)
-
-
 if __name__ == "__main__":
 
     argsparser = argparse.ArgumentParser("Trainer", description="To train the model", usage="TODO")
