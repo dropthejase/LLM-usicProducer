@@ -33,7 +33,7 @@ Attempt at creating a transformer capable of symbolic music generation. Focussin
 
 [**License / Attribution**](https://github.com/dropthejase/LLM-usicProducer#license--attribution)
 
-[**Acknowledgements**](https://github.com/dropthejase/LLM-usicProducer#acknowledgements)
+[**Acknowledgements**](https://github.com/dropthejase/LLM-usicProducer#acknowledgments)
 
 [**References**](https://github.com/dropthejase/LLM-usicProducer#references)
 
