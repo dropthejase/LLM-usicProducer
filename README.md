@@ -275,7 +275,7 @@ The Lakh MIDI Dataset which was used to train this model is distributed with a C
 ## Acknowledgments
 [Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
 
-<a href="https://github.com/salu133445/mmt/tree/main">Dong et al., 2022</a> and <a href="https://github.com/YatingMusic/compound-word-transformer/tree/main">Hsiao et al., 2021</a> for easily the idea and (relatively) easily understandable code!
+<a href="https://github.com/salu133445/mmt/tree/main">Dong et al., 2022</a> and <a href="https://github.com/YatingMusic/compound-word-transformer/tree/main">Hsiao et al., 2021</a> whose experiments showed that pooled embeddings could work, and also for the (relatively) easily understandable code!
 
 <a href="https://github.com/YatingMusic">YatingMusic</a> for the amazing `miditoolkit` library
 
