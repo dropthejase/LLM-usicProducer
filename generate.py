@@ -8,7 +8,7 @@ from typing import Union
 
 import torch
 
-from musictransformer import MusicTransformer3
+from musictransformer import MusicTransformer3, MusicTransformerXL
 from tokenizer import MidiTokenizerPooled, MidiTokenizerNoPool
 
 def generate_sample(json_file: Union[str,Path],
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     model = torch.load(args.model_path)
     model.to(device)
 
-    if isinstance(model, MusicTransformer3):
+    if isinstance(model, MusicTransformer3) or isinstance(model, MusicTransformerXL):
         tokenizer = MidiTokenizerPooled()
         num_token_families = 4
         TEMPERATURE = [0.8, 0.6, 0.6, 0.8]
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     # defaults
     genconfig = {
             "temperature": TEMPERATURE, 
-            "num_bars": 8,
-            "max_steps": 256,
+            "num_bars": 16,
+            "max_steps": 512,
             "sampling_fn": "top_k",
             "threshold": THRESHOLD,
         }

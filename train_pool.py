@@ -96,17 +96,22 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
 
             if steps % loggingsteps == 0:
                 print(f"Step: {steps}, Train Loss: {loss.item():.4f}")
-                torch.save(model, f"{filename}/{filename}-checkpoint-{epoch}-{steps}.pth")
+                torch.save(model, f"{filename}/{filename}-checkpoint-{epoch+1}-{steps}.pth")
 
                 # log to csv
                 with open(f"{filename}/train_losses.csv", "a") as csvfile:
                     writer = csv.DictWriter(csvfile, fieldnames=['steps', 'train_loss'])
-                    writer.writerow({'steps': steps, 'train_loss': loss.item()})
+                    writer.writerow({'steps': steps+(12*3721), 'train_loss': loss.item()})
                 
             steps += batch_size
 
         print(f"Epoch {epoch} Average Loss: {sum(losses) / num_batch}")
         torch.save(model, f"{filename}/{filename}-full-{epoch}.pth")
+
+        # log to csv
+        with open(f"{filename}/train_losses.csv", "a") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=['steps', 'train_loss'])
+            writer.writerow({'steps': steps+(12*3721), 'train_loss': loss.item()})
 
 
 if __name__ == "__main__":
@@ -172,10 +177,10 @@ if __name__ == "__main__":
     print("Train Dataset Size: ", len(train_dataset))
 
     training_args = {"batch_size": 12,
-                    "num_epochs": 1,
+                    "num_epochs": 2,
                     "lr": 5e-4,
                     "filename": "musictransformerXL",
-                    "loggingsteps": 5000} # was 20000
+                    "loggingsteps": 1000} # was 20000
     
     if args.training_args:
         with open(args.training_args) as jsonfile:

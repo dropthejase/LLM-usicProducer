@@ -524,6 +524,7 @@ class MusicTransformerXL(nn.Module):
         self,
         prompt,
         max_steps,
+        num_bars = 8,
         eos_token = None,
         temperature = [0.9, 0.9, 0.9, 0.9],
         sampling_fn = "top_k",
@@ -532,14 +533,10 @@ class MusicTransformerXL(nn.Module):
         **kwargs
     ):
         max_seq_len = self.max_seq_len
-        print("max_seq_len: ", max_seq_len)
 
         prompt, ps = pack([prompt], '* t tf') # tf = token fam
 
         b, t = prompt.size()[0], prompt.size()[1] # 
-        print("b: ", b)
-        print("t: ", t)
-        print("prompt: ", prompt.size())
 
         *all_leading_tokens, _ = prompt.split(max_seq_len, dim = 1) # (b,t,4) -> (b,4,t) -> split at t
 
@@ -596,7 +593,7 @@ class MusicTransformerXL(nn.Module):
             ]).view(1, 1, -1)
 
             out = torch.hstack((out, pred_ids))
-            print("out: ", out, out.size())
+
             # End if EOS reached
             if exists(eos_token):
                 is_eos_tokens = out == eos_token
