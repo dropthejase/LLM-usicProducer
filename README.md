@@ -248,9 +248,9 @@ python prepare.py <output_filename.pt> -b <block_size> -fp <path/to/tokens/folde
 ~~~
 python train_pool.py
 ~~~
-* Use `--dataset_path <path/to/dataset.pt>` to specify path of Dataset object (by default it will look for 'dataset_pitch_ins512.pt' in your working director)
-* You can specify the model's configurations using `--model_config` and specifying the model_config.json file
-* You can do the same with the training arguments using `--training_args` and specifying the training_args.json file
+* Use `--dataset_path <path/to/dataset.pt>` to specify path of Dataset object (by default it will look for 'dataset_pitch_ins512.pt' in your working directory)
+* You can specify the model's configurations using `--model_config` and providing the path to the model_config.json file
+* You can do the same with the training arguments using `--training_args`, speciying the path to the training_args.json file
 * Use `--train_split` followed by a `float` number to specify train split
 * Use `-fp` followed by the path to your .pth model if you wish to load a pretrained model or checkpoint
 

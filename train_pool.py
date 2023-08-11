@@ -172,8 +172,8 @@ if __name__ == "__main__":
     training_args = {"batch_size": 12,
                     "num_epochs": 1,
                     "lr": 5e-4,
-                    "filename": "musictransformerTEST",
-                    "loggingsteps": 20000}
+                    "filename": "musictransformerXL",
+                    "loggingsteps": 10000}
     
     if args.training_args:
         with open(args.training_args) as jsonfile:
