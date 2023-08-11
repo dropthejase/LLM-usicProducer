@@ -389,6 +389,26 @@ class MusicTransformerXLWrapper(TransformerWrapper):
         self.token_emb = PooledEmbedding(n_tokens, emb_sizes, emb_pooling, d_model)
         self.to_logits = PooledToLogits(n_tokens, d_model)
 
+         # params
+        self.n_tokens = n_tokens
+        self.emb_sizes = emb_sizes
+        
+        if emb_pooling != "concat" and emb_pooling != "sum":
+            raise ValueError("emb_pooling must be 'concat' or 'sum")
+        if emb_pooling == "sum" and len(set(emb_sizes)) != 1:
+            raise ValueError("if emb_pooling is 'sum', then emb_sizes must be same value")
+        self.emb_pooling = emb_pooling
+
+        self.n_layers = n_layers
+        self.n_heads = n_heads
+        self.d_model = d_model
+        self.dropout = dropout
+
+        self.max_mem_len = max_mem_len
+        self.max_seq_len = max_seq_len
+
+        self.loss_fn = nn.CrossEntropyLoss()
+
     def forward(
         self,
         x,
@@ -495,8 +515,8 @@ class MusicTransformerXL(nn.Module):
         self.pad_value = pad_value
         self.ignore_index = ignore_index
 
-        self.net = MusicTransformerXLWrapper(n_tokens, emb_sizes, emb_pooling, max_seq_len, max_mem_len, n_layers, n_heads, d_model, dropout)
-        self.max_seq_len = self.net.max_seq_len
+        self.model = MusicTransformerXLWrapper(n_tokens, emb_sizes, emb_pooling, max_seq_len, max_mem_len, n_layers, n_heads, d_model, dropout)
+        self.max_seq_len = self.model.max_seq_len
 
     @torch.no_grad()
     @eval_decorator
@@ -526,7 +546,7 @@ class MusicTransformerXL(nn.Module):
         # catch the memory up to the current segment
 
         for leading_tokens in all_leading_tokens:
-            _, mems = self.net(
+            _, mems = self.model(
                 leading_tokens,
                 mems = mems,
                 return_mems = True,
@@ -546,7 +566,7 @@ class MusicTransformerXL(nn.Module):
 
             x = out[:, curr_pos:]
 
-            logits, mems = self.net(
+            logits, mems = self.model(
                 x,
                 mems = curr_mems,
                 return_mems = True,
@@ -594,13 +614,27 @@ class MusicTransformerXL(nn.Module):
 
         return out
 
-    def forward(
-        self,
-        x,
-        mems = None,
-        **kwargs
-    ):
-        return self.net(x, mems = mems, **kwargs)
+    def forward(self, x, mems = None, **kwargs):
+        return self.model(x, mems = mems, **kwargs)
+    
+    def compute_loss(self, outputs, targets):
+        return self.model.compute_loss(outputs, targets)
+
+    def save_params(self, filepath):
+        config = {
+            "n_tokens": self.model.n_tokens,
+            "emb_sizes": self.model.emb_sizes,
+            "emb_pooling": self.model.emb_pooling,
+            "n_layers": self.model.n_layers,
+            "n_heads": self.model.n_heads,
+            "d_model": self.model.d_model,
+            "dropout p": self.model.dropout,
+            "max_seq_len": self.model.max_seq_len,
+            "max_mem_len": self.model.max_mem_len,
+        }
+
+        with open(filepath, "w") as file:
+            json.dump(config, file)
 
 
 ##==============================================================================================================================================##

@@ -1,6 +1,6 @@
 from tokenizer import MidiTokenizerPooled, MidiTokenizerNoPool
 from prepare import MIDIDataset
-from musictransformer import MusicTransformer3
+from musictransformer import MusicTransformer3, MusicTransformerXL
 
 
 import argparse
@@ -149,7 +149,9 @@ if __name__ == "__main__":
                 "n_layers": 12,
                 "n_heads": 8,
                 "d_model": 512,
-                "dropout": 0.1
+                "dropout": 0.1,
+                "max_seq_len": 512,
+                "max_mem_len": 512,
         }
         
         if args.model_config:
@@ -159,7 +161,7 @@ if __name__ == "__main__":
                 model_config[k] = v
         
         # create model
-        model = MusicTransformer3(
+        model = MusicTransformerXL(
             n_tokens=tokenizer.vocab["n_tokens"],
             **model_config
         )            
@@ -173,7 +175,7 @@ if __name__ == "__main__":
                     "num_epochs": 1,
                     "lr": 5e-4,
                     "filename": "musictransformerXL",
-                    "loggingsteps": 10000}
+                    "loggingsteps": 5000} # was 20000
     
     if args.training_args:
         with open(args.training_args) as jsonfile:
