@@ -518,7 +518,6 @@ class MusicTransformerXL(nn.Module):
         self.ignore_index = ignore_index
 
         self.model = MusicTransformerXLWrapper(n_tokens, emb_sizes, emb_pooling, max_seq_len, max_mem_len, n_layers, n_heads, d_model, dropout)
-        self.max_seq_len = self.model.max_seq_len
 
     @torch.no_grad()
     @eval_decorator
@@ -534,13 +533,15 @@ class MusicTransformerXL(nn.Module):
         mems = None,
         **kwargs
     ):
-        max_seq_len = self.max_seq_len
+        max_seq_len = self.model.max_seq_len
 
         prompt, ps = pack([prompt], '* t tf') # tf = token fam
 
         b, t = prompt.size()[0], prompt.size()[1] # 
 
-        *all_leading_tokens, _ = prompt.split(max_seq_len, dim = 1) # (b,t,4) -> (b,4,t) -> split at t
+        *all_leading_tokens, _ = prompt.split(max_seq_len, dim = 1)
+
+        print("Num_leading_tokens: ", len(all_leading_tokens))
 
         # catch the memory up to the current segment
 

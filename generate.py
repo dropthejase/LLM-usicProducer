@@ -126,8 +126,8 @@ if __name__ == "__main__":
     # defaults
     genconfig = {
             "temperature": TEMPERATURE, 
-            "num_bars": 16,
-            "max_steps": 512,
+            "num_bars": 32,
+            "max_steps": 256,
             "sampling_fn": "top_k",
             "threshold": THRESHOLD,
         }
