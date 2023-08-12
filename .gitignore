@@ -168,7 +168,7 @@ cython_debug/
 /fast-transformers
 /musictransformer*/
 /tokens*
-/dataset
+/mydataset
 /'testfile Project'
 
 musictransformer-full-22.pth
