@@ -91,6 +91,7 @@ You can either follow the below instructions or import the functions within the 
 python generate.py -mp <path/to/model.pth> -o <generated/samples/directory> -n <num_samples_to_generate> --genconfig <path/to/genconfig.json>
 ~~~
   You can create your own generation configurations in a .json file and specify its path using `--genconfig`
+  Within your `genconfig.json` file, you can set the number of new tokens to make via the `num_bars` or `max_steps` keyword arguments. Essentially the model will either generate X `num_bars`(bars) of music or Y `max_steps` (depending on which gets reached first)
 
 ### Inference with Prompt
 **Merge your drums, bass and piano .mid files.**
