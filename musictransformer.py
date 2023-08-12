@@ -271,16 +271,18 @@ class MusicTransformer3(nn.Module):
             logit_note_dur = outputs[2][:, -1, :]
             logit_pitch_instrument = outputs[3][:, -1, :]
 
-            # make sure we are continuing the song - bar must be at least the same bar as 'current_bar'
-            # also prevent 'skipping' more than 1 bars max
             sample_bar = sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])
             #print("step: ", steps, " sample bar: ", sample_bar.item(), " current bar: ", current_bar)
 
-            '''while sample_bar.item() < current_bar:
-                sample_bar = self.sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])'''
-            '''while sample_bar.item() - current_bar > 1:
+            '''
+            # make sure we are continuing the song - bar must be at least the same bar as 'current_bar'
+            # also prevent 'skipping' more than 1 bars max
+            while sample_bar.item() < current_bar:
+                sample_bar = self.sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])
+            while sample_bar.item() - current_bar > 1:
                 print("step: ", steps, " sample bar: ", sample_bar.item(), " current bar: ", current_bar)
-                sample_bar = self.sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])'''
+                sample_bar = self.sample(logit_bar, temperature=temperature[0], sampling_fn=sampling_fn, threshold=threshold[0])
+            '''
 
             # sample the rest
             sample_start_pos = sample(logit_start_pos, temperature=temperature[1], sampling_fn=sampling_fn, threshold=threshold[1])
@@ -557,7 +559,22 @@ class MusicTransformerXL(nn.Module):
 
         out = prompt
 
-        for _ in tqdm(range(max_steps)):
+        # if last tokens are EOS, take the next last
+        if out[:, -1, :].view(-1)[0].item() == 2:
+            current_bar = out[:, -2, :].view(-1)[0].item()
+        elif out[:, -1, :].view(-1)[0].item() == 1:
+            current_bar = 3
+        else:
+            current_bar = out[:, -1, :].view(-1)[0].item()
+        
+        steps = 0
+        start_bar = current_bar
+        
+        # progress bar
+        step_pbar = tqdm(total=max_steps, desc="Step count")
+        bar_pbar = tqdm(total=num_bars, desc="Bars generated")
+
+        while current_bar <= (start_bar + num_bars) and steps < max_steps:
             curr_segment_len = out[0].shape[-1] # use one of the token fams to find T
             is_last_segment_tokens = divisible_by(curr_segment_len, max_seq_len)
 
@@ -585,6 +602,11 @@ class MusicTransformerXL(nn.Module):
                 curr_pos = curr_segment_len
                 curr_mems = mems
 
+            # update bar_count (goes from token_id 4 onwards)
+            if (sample_bar.item() - current_bar) > 0:
+                current_bar += 1
+                bar_pbar.update(1)
+
             pred_ids = torch.concat([
                 sample_bar,
                 sample_start_pos,
@@ -605,8 +627,10 @@ class MusicTransformerXL(nn.Module):
                     out = out.masked_fill(mask, self.pad_value)
                     break
 
-        out = out[:, t:]
+            steps += 1
+            step_pbar.update(1)
 
+        #out = out[:, t:]
         out, = unpack(out, ps, '* t tf')
 
         return out
