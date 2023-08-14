@@ -203,7 +203,7 @@ During tokenization, any further songs that create errors are removed. Typically
 ## Transformer Setup
 [Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
 
-I created two models: MusicTransformer3 and MusicTransformerXL. Both follow generally the same setup as described below. The only differences are that MusicTransformer3 uses standard decoder blocks with absolute positional encodings (Vaswani et al., 2017), whereas MusicTransformerXL uses relative attention with and a max memory length of 512 (Dai et al., 2019).
+I created two models: MusicTransformer3 and MusicTransformerXL. Both follow generally the same setup as described below. MusicTransformer3 uses standard decoder blocks with absolute positional encodings (Vaswani et al., 2017), whereas with MusicTransformerXL uses relative attention (Dai et al., 2019). With the latter, the hidden states are concatenated with their corresponding hidden states from the previous segment (the 'memory') before being fed into the decoder blocks. I used a max memory length of 512.
 
 I use 12 transformer decoder blocks, each with 8 attention heads. Each token family has a separate embedding layer with different embedding dimensions (similar to Hsiao et al., 2021): 
 
