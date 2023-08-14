@@ -80,7 +80,7 @@ After creating a virtual environment, cloning the repo, and installing dependenc
 >If you are having issues with `miditoolkit`, navigate to `.venv/lib/python3.10/site-packages/miditoolkit/midi/parser.py` (or your virtual env equivalent) and replace `np.int` with `int` on **line 205**.
 
 ### Download Models
-Download the pooled embedding model for MusicTransformer3 <a href="https://drive.google.com/file/d/18s_Es63QMqT9htQZ1FpUQvFGmPjdUj1L/view?usp=sharing">here</a>, or MusicTransformerXL <a href="TODO">here</a> into your working directory
+Download the pooled embedding model for MusicTransformer3 <a href="https://drive.google.com/file/d/18s_Es63QMqT9htQZ1FpUQvFGmPjdUj1L/view?usp=sharing">here</a>, or MusicTransformerXL <a href="https://drive.google.com/file/d/1v4lJYCrpKVEs1RbqTCQ_ZlQ3uuw2fq0H/view?usp=sharing">here</a> into your working directory
 * This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
 * Unfortunately the model's object name is called 'Transformer3' as I had experimented quite a few iterations beforehand
 

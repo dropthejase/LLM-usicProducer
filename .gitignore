@@ -170,7 +170,7 @@ cython_debug/
 /tokens*
 /mydataset
 /'testfile Project'
-/generated_samples
+/generated
 /mydataset
 
 musictransformer-full-22.pth
