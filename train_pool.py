@@ -1,6 +1,6 @@
 from tokenizer import MidiTokenizerPooled, MidiTokenizerNoPool
 from prepare import MIDIDataset
-from musictransformer import MusicTransformer3
+from musictransformer import MusicTransformer3, MusicTransformerXL
 
 
 import argparse
@@ -96,22 +96,28 @@ def train(x, model, batch_size=8, num_epochs=3, lr=1e-4, filename="model", loggi
 
             if steps % loggingsteps == 0:
                 print(f"Step: {steps}, Train Loss: {loss.item():.4f}")
-                torch.save(model, f"{filename}/{filename}-checkpoint-{epoch}-{steps}.pth")
+                torch.save(model, f"{filename}/{filename}-checkpoint-{epoch+10}-{steps}.pth")
 
                 # log to csv
                 with open(f"{filename}/train_losses.csv", "a") as csvfile:
                     writer = csv.DictWriter(csvfile, fieldnames=['steps', 'train_loss'])
-                    writer.writerow({'steps': steps, 'train_loss': loss.item()})
+                    writer.writerow({'steps': steps+(12*3721*9), 'train_loss': loss.item()})
                 
             steps += batch_size
 
         print(f"Epoch {epoch} Average Loss: {sum(losses) / num_batch}")
-        torch.save(model, f"{filename}/{filename}-full-{epoch}.pth")
+        torch.save(model, f"{filename}/{filename}-full-{epoch+10}.pth")
+
+        # log to csv
+        with open(f"{filename}/train_losses.csv", "a") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=['steps', 'train_loss'])
+            writer.writerow({'steps': steps+(12*3721*9), 'train_loss': loss.item()})
 
 
 if __name__ == "__main__":
 
     argsparser = argparse.ArgumentParser("Trainer", description="To train the model", usage="TODO")
+    argsparser.add_argument("-xl", action="store_true", help="Use if you want to train MusicTransformerXL instead of MusicTransformer3")
     argsparser.add_argument("-t", "--tokenizer", choices=["pooled", "nopool"], default="pooled", help="Choose between 'pooled' (MidiTokenizerPooled) or 'nopool' (MidiTokenizerNoPool) (default: pooled)")
     argsparser.add_argument("-fp", "--from_pretrained", help="Path to pretrained model or checkpoint .pth file")
     argsparser.add_argument("--dataset_path", default="dataset_pitch_ins512.pt", help="Path to Dataset Object .pt file (default: dataset_pitch_ins512.pt)")
@@ -144,13 +150,18 @@ if __name__ == "__main__":
         model = torch.load(args.from_pretrained)
     
     else:
+        
         model_config = {"emb_sizes": [512, 128, 256, 512],
                 "emb_pooling": "concat",
                 "n_layers": 12,
                 "n_heads": 8,
                 "d_model": 512,
-                "dropout": 0.1
+                "dropout": 0.1,
         }
+
+        if args.xl:
+            model_config["max_seq_len"] = 512
+            model_config["max_mem_len"] = 512
         
         if args.model_config:
             with open(args.model_config) as jsonfile:
@@ -159,10 +170,13 @@ if __name__ == "__main__":
                 model_config[k] = v
         
         # create model
-        model = MusicTransformer3(
+        model = MusicTransformerXL(
             n_tokens=tokenizer.vocab["n_tokens"],
             **model_config
-        )            
+        ) if args.xl else MusicTransformer3(
+            n_tokens=tokenizer.vocab["n_tokens"],
+            **model_config
+        )
 
     device = torch.device(args.device)
     model.to(device)
@@ -170,17 +184,32 @@ if __name__ == "__main__":
     print("Train Dataset Size: ", len(train_dataset))
 
     training_args = {"batch_size": 12,
-                    "num_epochs": 1,
+                    "num_epochs": 6,
                     "lr": 5e-4,
-                    "filename": "musictransformerTEST",
-                    "loggingsteps": 20000}
-    
+                    "loggingsteps": 1000} # was 20000
+    if args.xl:
+        training_args["filename"] = "musictransformerXL"
+    else:
+        training_args["filename"] = "musictransformer"
+
     if args.training_args:
         with open(args.training_args) as jsonfile:
             t_args = json.load(jsonfile)
         for k, v in t_args.items():
             training_args[k] = v
     
+    # check folder overwrite
+    if Path(training_args["filename"]).exists():
+        while True:
+            overwrite_input = input(f"The folder '{training_args['filename']}' already exists. There might be a chance that the model.pth gets overriden because the model's filename is based on the folder name. \nTo avoid this, either alter the train() function above to save with a different filename, or create a different folder. \nDo you wish to continue? (y/n) ")
+            if overwrite_input.lower() in ['y', 'n']:
+                break
+        if overwrite_input.lower() == 'n':
+            filename = input("Enter new foldername: ")
+            training_args["filename"] = filename
+        else:
+            pass
+
     train(train_dataset, model, **training_args)
 
  

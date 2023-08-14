@@ -8,7 +8,7 @@ from typing import Union
 
 import torch
 
-from musictransformer import MusicTransformer3
+from musictransformer import MusicTransformer3, MusicTransformerXL
 from tokenizer import MidiTokenizerPooled, MidiTokenizerNoPool
 
 def generate_sample(json_file: Union[str,Path],
@@ -40,7 +40,14 @@ def generate_sample(json_file: Union[str,Path],
         prompt_idx = (len(testprompt) - 1) if len(testprompt) > 1 else 1 # take prompt_idx up to (but not including) EOS
     if prompt_idx > len(testprompt):
         prompt_idx = len(testprompt) - 1 # take prompt_idx up to (but not including) EOS
+
+    if len(testprompt) > 512:
+            print("WARNING: length of prompt is > 512 - this might produce weird results! We suggest you keep the total length of your prompt to 512 tokens or below! An easy way to do this is to set prompt index -pi to 512 (or lower).")
+
     prompt = torch.LongTensor(testprompt[:prompt_idx]).view(1, -1, num_token_families).to(device)
+
+    if kwargs["max_steps"] > 512:
+        print("WARNING: max_steps > 512 - this might produce weird results! We suggest you keep max_steps to 512 or below!")
 
     print("Prompt Size: ", prompt.size())
     print("Start generating from idx: ", prompt_idx)
@@ -105,7 +112,7 @@ if __name__ == "__main__":
     model = torch.load(args.model_path)
     model.to(device)
 
-    if isinstance(model, MusicTransformer3):
+    if isinstance(model, MusicTransformer3) or isinstance(model, MusicTransformerXL):
         tokenizer = MidiTokenizerPooled()
         num_token_families = 4
         TEMPERATURE = [0.8, 0.6, 0.6, 0.8]
@@ -126,8 +133,8 @@ if __name__ == "__main__":
     # defaults
     genconfig = {
             "temperature": TEMPERATURE, 
-            "num_bars": 8,
-            "max_steps": 256,
+            "num_bars": 32,
+            "max_steps": 512,
             "sampling_fn": "top_k",
             "threshold": THRESHOLD,
         }
