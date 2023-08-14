@@ -247,10 +247,10 @@ class MusicTransformer3(nn.Module):
         self.model.eval()
 
         # if last tokens are EOS, take the next last
-        if prompt[:, -1, :].view(-1)[0].item() == 2:
-            current_bar = prompt[:, -2, :].view(-1)[0].item()
-        elif prompt[:, -1, :].view(-1)[0].item() == 1:
-            current_bar = 3
+        #if prompt[:, -1, :].view(-1)[0].item() == 2:
+        #    current_bar = prompt[:, -2, :].view(-1)[0].item()
+        if prompt[:, -1, :].view(-1)[0].item() == 1:
+            current_bar = 4 # token id 4 = bar0
         else:
             current_bar = prompt[:, -1, :].view(-1)[0].item()
         
@@ -537,15 +537,14 @@ class MusicTransformerXL(nn.Module):
 
         prompt, ps = pack([prompt], '* t tf') # tf = token fam
 
-        b, t = prompt.size()[0], prompt.size()[1] # 
+        b, t = prompt.size()[0], prompt.size()[1]
 
         *all_leading_tokens, _ = prompt.split(max_seq_len, dim = 1)
-
-        print("Num_leading_tokens: ", len(all_leading_tokens))
 
         # catch the memory up to the current segment
 
         for leading_tokens in all_leading_tokens:
+            print(leading_tokens.size())
             _, mems = self.model(
                 leading_tokens,
                 mems = mems,
@@ -561,12 +560,14 @@ class MusicTransformerXL(nn.Module):
         out = prompt
 
         # if last tokens are EOS, take the next last
-        if out[:, -1, :].view(-1)[0].item() == 2:
-            current_bar = out[:, -2, :].view(-1)[0].item()
-        elif out[:, -1, :].view(-1)[0].item() == 1:
-            current_bar = 3
+        #if out[:, -1, :].view(-1)[0].item() == 2:
+        #    current_bar = out[:, -2, :].view(-1)[0].item()
+        if out[:, -1, :].view(-1)[0].item() == 1:
+            current_bar = 4 # token 4 = bar0
         else:
             current_bar = out[:, -1, :].view(-1)[0].item()
+        
+        print("CURRENT BAR TOKEN: ", current_bar)
         
         steps = 0
         start_bar = current_bar
@@ -617,7 +618,7 @@ class MusicTransformerXL(nn.Module):
 
             out = torch.hstack((out, pred_ids))
 
-            # End if EOS reached
+            '''# End if EOS reached
             if exists(eos_token):
                 is_eos_tokens = out == eos_token
 
@@ -627,13 +628,11 @@ class MusicTransformerXL(nn.Module):
                     mask = shifted_is_eos_tokens.float().cumsum(dim = -1) >= 1
                     out = out.masked_fill(mask, self.pad_value)
                     break
-
+            '''
             steps += 1
             step_pbar.update(1)
 
-        #out = out[:, t:]
         out, = unpack(out, ps, '* t tf')
-
         return out
 
     def forward(self, x, mems = None, **kwargs):

@@ -48,10 +48,10 @@ I used a few Kontakt libraries for the sounds: Studio Drummer (drums), Mark II C
 
 You can find them in the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder
 
-### Inference from Scratch
+### Inference from Scratch (MusicTransformer3 model)
 See the 'fromscratch' MP3 files in the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder.
 
-### Inference with Prompt
+### Inference with Prompt (Music Transformer3 model)
 (Again, refer to the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder)
 
 I've noticed that these don't seem to perform as well, with the model often repeating what was before. The coherence of what is generated is also inconsistent. Samples are generated based on (around) the original BPMs of their respective prompts. I suspect that prompts with that are more repetitive (and perhaps less rhythmically and melodically diverse) may lend itself to more coherent inferences.
@@ -79,17 +79,22 @@ After creating a virtual environment, cloning the repo, and installing dependenc
 >
 >If you are having issues with `miditoolkit`, navigate to `.venv/lib/python3.10/site-packages/miditoolkit/midi/parser.py` (or your virtual env equivalent) and replace `np.int` with `int` on **line 205**.
 
-### Download Model
-Download the pooled embedding model <a href="https://drive.google.com/file/d/18s_Es63QMqT9htQZ1FpUQvFGmPjdUj1L/view?usp=sharing">here</a> and unzip into the working directory
+### Download Models
+Download the pooled embedding model for MusicTransformer3 <a href="https://drive.google.com/file/d/18s_Es63QMqT9htQZ1FpUQvFGmPjdUj1L/view?usp=sharing">here</a>, or MusicTransformerXL <a href="TODO">here</a> into your working directory
 * This model has been trained on 22 epochs - the folder will contain specific hyperparameters.
 * Unfortunately the model's object name is called 'Transformer3' as I had experimented quite a few iterations beforehand
 
 You can either follow the below instructions or import the functions within the relevant .py files into your own .py file if desired. The below instructions uses the command line interface.
 
+> **Note** 
+>
+>It is recommended that you keep the length of your prompts (if using a prompt) `-pi` and number of new tokens generated `max_steps` to 512 tokens max. The models do not perform as well when you increase this number beyond.
+
 ### Inference from Scratch
 ~~~
 python generate.py -mp <path/to/model.pth> -o <generated/samples/directory> -n <num_samples_to_generate> --genconfig <path/to/genconfig.json>
 ~~~
+  Use the `-mp` option to specify the model path to either the MusicTransformer3 model or the MusicTransformerXL model
   You can create your own generation configurations in a .json file and specify its path using `--genconfig`
   Within your `genconfig.json` file, you can set the number of new tokens to make via the `num_bars` or `max_steps` keyword arguments. Essentially the model will either generate X `num_bars`(bars) of music or Y `max_steps` (depending on which gets reached first)
 
@@ -198,6 +203,8 @@ During tokenization, any further songs that create errors are removed. Typically
 ## Transformer Setup
 [Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
 
+I created two models: MusicTransformer3 and MusicTransformerXL. Both follow generally the same setup as described below. The only differences are that MusicTransformer3 uses standard decoder blocks with absolute positional encodings (Vaswani et al., 2017), whereas MusicTransformerXL uses relative attention with and a max memory length of 512 (Dai et al., 2019).
+
 I use 12 transformer decoder blocks, each with 8 attention heads. Each token family has a separate embedding layer with different embedding dimensions (similar to Hsiao et al., 2021): 
 
 | Token family | Vocab size | Embedding dimension |
@@ -207,16 +214,17 @@ I use 12 transformer decoder blocks, each with 8 attention heads. Each token fam
 | note_dur     | 132        | 256                 |
 | pitch_instrument | 227    | 512                 |
 
-Each embedding layer is then concatenated and linearly projected to layer with a *d_model* of 512. Absolute positional encodings (Vaswani et al., 2017) are added here. Once data is passed through the transformer blocks, they are then linearly projected back to the four separate token families. Each output per token therefore comprises four logits.
+Each embedding layer is then concatenated and linearly projected to layer with a *d_model* of 512. For MusicTransformer3, absolute positional encodings (Vaswani et al., 2017) are added here. Once data is passed through the transformer blocks, they are then linearly projected back to the four separate token families. Each output per token therefore comprises four logits.
 
 All input sequences have been trimmed to a sequence length of 512
 
 Loss is computed as an average cross entropy loss across the four token families (following Hsiao et al., 2021).
 
-I use 90% of the dataset for training. I use a batch size of 12, learning rate of 0.5e-4 and trained the model for 22 epochs.
+I use 90% of the dataset for training. I use a batch size of 12 and a learning rate of 0.5e-4.
+
+MusicTransformer3 was trained for 22 epochs. MusicTransformerXL was trained for 15 epochs.
 
 ![Transformer Architecture](assets/architecture.png)
-
 
 ## Instructions
 [Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
@@ -249,11 +257,12 @@ python prepare.py <output_filename.pt> -b <block_size> -fp <path/to/tokens/folde
 ~~~
 python train_pool.py
 ~~~
+* Use `-xl` if you want to train a MusicTransformerXL model from scratch, otherwise it will default to creating a MusicTransformer3 model
 * Use `--dataset_path <path/to/dataset.pt>` to specify path of Dataset object (by default it will look for 'dataset_pitch_ins512.pt' in your working directory)
 * You can specify the model's configurations using `--model_config` and providing the path to the model_config.json file
 * You can do the same with the training arguments using `--training_args`, speciying the path to the training_args.json file
 * Use `--train_split` followed by a `float` number to specify train split
-* Use `-fp` followed by the path to your .pth model if you wish to load a pretrained model or checkpoint
+* Use `-fp` followed by the path to your .pth model if you wish to load a pretrained model or checkpoint - this can be either a MusicTransformer3 or MusicTransformerXL model
 
 
 ### Generate
@@ -264,9 +273,8 @@ See 'Quickstart' above
 
 I have several ideas on where to take this project forward:
 1. Retry training without pooled embeddings using Transformer-XL (which could provide for attention towards wider context length)
-2. Try using Transformer-XL with the pooled embeddings (this would be a stretch goal)
-3. Recreate the model but have more instrument groups, e.g. drums, percussion, bass, piano, synth leads, synth pads, guitars
-4. Retrain the model using crowdsourced music - anyone want to contribute? :grin: (Send me a DM)
+2. Recreate the model but have more instrument groups, e.g. drums, percussion, bass, piano, synth leads, synth pads, guitars
+3. Retrain the model using crowdsourced music - anyone want to contribute? :grin: (Send me a DM)
 
 ## License / Attribution
 [Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
@@ -284,6 +292,8 @@ The Lakh MIDI Dataset which was used to train this model is distributed with a C
 
 ## References
 [Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
+
+**Dai, Z., Yang, Z., Yang, Y., Carbonell, J., Le, Q. V., Salakhutdinov, R. (2019).** Transformer-XL: Attentive Language Models Beyond a Fixed-Length Context. ArXiv:1901.02860. https://arxiv.org/abs/1901.02860
 
 **Dong, H.-W., Chen, K., Dubnov, S., McAuley, J., & Berg-Kirkpatrick, T. (2022).** Multitrack Music Transformer: Learning Long-Term Dependencies in Music with Diverse Instruments. ArXiv:2207.06983 [Cs, Eess]. https://arxiv.org/abs/2207.06983
 
