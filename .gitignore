@@ -168,10 +168,7 @@ cython_debug/
 /fast-transformers
 /musictransformer*/
 /tokens*
-<<<<<<< HEAD
 /mydataset
-=======
->>>>>>> transxl
 /'testfile Project'
 /generated_samples
 /mydataset
