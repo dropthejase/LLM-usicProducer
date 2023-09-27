@@ -51,6 +51,8 @@ You can find them in the <a href="https://github.com/dropthejase/musicllm/tree/m
 ### Inference from Scratch (MusicTransformer3 model)
 See the 'fromscratch' MP3 files in the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder.
 
+I've noticed that some of these generated samples might simply be playing training data - e.g. sample 3 is ABBA's Money Money Money! Hopefully this isn't the case with the other two samples (although I'm unable to recognise it).
+
 ### Inference with Prompt (Music Transformer3 model)
 (Again, refer to the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder)
 

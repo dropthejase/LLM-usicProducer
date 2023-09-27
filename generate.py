@@ -51,7 +51,7 @@ def generate_sample(json_file: Union[str,Path],
 
     print("Prompt Size: ", prompt.size())
     print("Start generating from idx: ", prompt_idx)
-    print(prompt)
+    #print(prompt)
 
     gen = model.generate(prompt, **kwargs)
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     argparser.add_argument("-mp", "--model_path", default="musictransformer/musictransformer-full-22.pth", help="Path to .pth model")
     argparser.add_argument("-d", "--device", choices=["cpu","cuda","mps"], default="cpu", help="torch.device to use")
     argparser.add_argument("-pi", "--prompt_idx", type=int, help="Use if you want to truncate your prompt tokens")
-    argparser.add_argument("-o", "--out_dir", default="generated_samples", help="Specify output folder for generated samples - include the '.mid' suffix (default: a folder called 'generated_samples')")
+    argparser.add_argument("-o", "--out_dir", default="generated", help="Specify output folder for generated samples - include the '.mid' suffix (default: a folder called 'generated_samples')")
     argparser.add_argument("-sp", "--save_prompt", action="store_true", help="Use if you want to save your prompt separately for comparison purposes")
     argparser.add_argument("-pe", "--print_new_events", action="store_true", help="Use if you want to print new token events created")
     argparser.add_argument("-n", "--num_samples", type=int, default=1, help="Number of samples to generate")

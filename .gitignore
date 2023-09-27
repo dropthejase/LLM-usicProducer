@@ -174,4 +174,5 @@ cython_debug/
 /mydataset
 
 musictransformer-full-22.pth
+musictransformerXL-full-15.pth
 dataset_pitch_ins512.pt
