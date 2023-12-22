@@ -42,7 +42,7 @@ Attempt at creating a transformer capable of symbolic music generation. Focussin
 ## Examples of Generated MIDI Files
 [Back to Contents](https://github.com/dropthejase/LLM-usicProducer#contents)
 
-Showcasing some of my favourites! You'll notice that they tend to 'forget' or 'lose context' after a while but this is still really cool nonetheless.
+Showcasing some of my favourite generated samples! You'll notice that they tend to 'forget' or 'lose context' after a while but it's a really cool achievement nonetheless!
 
 I used a few Kontakt libraries for the sounds: Studio Drummer (drums), Mark II Classic (bass) and Alicia Keys (piano). I slapped on some reverb and delay, and did some slight EQ-ing with the MH Channelstrip. I then ran everything through a mix buss chain and brought the volume up with Waves L2.
 
@@ -56,7 +56,7 @@ I've noticed that some of these generated samples might simply be playing traini
 ### Inference with Prompt (Music Transformer3 model)
 (Again, refer to the <a href="https://github.com/dropthejase/musicllm/tree/main/fav_samples">'fav_samples'</a> folder)
 
-I've noticed that these don't seem to perform as well, with the model often repeating what was before. The coherence of what is generated is also inconsistent. Samples are generated based on (around) the original BPMs of their respective prompts. I suspect that prompts with that are more repetitive (and perhaps less rhythmically and melodically diverse) may lend itself to more coherent inferences.
+I've noticed that when using prompts, the LLM does not seem to perform as well, with the model often simply repeating what was before. The coherence of what is generated is also inconsistent. I suspect that prompts that are more repetitive (and perhaps less rhythmically and melodically diverse) may lend itself to more coherent inferences.
 
 
 **Example 1 ('Concrete Jungle Island Life' by Shiv & Jason)**
@@ -90,7 +90,7 @@ You can either follow the below instructions or import the functions within the 
 
 > **Note** 
 >
->It is recommended that you keep the length of your prompts (if using a prompt) `-pi` and number of new tokens generated `max_steps` to 512 tokens max. The models do not perform as well when you increase this number beyond.
+>It is recommended that you keep the length of your prompts (if using a prompt) `-pi` and number of new tokens generated `max_steps` to 512 tokens max. The models do not perform as well when you increase beyond this number.
 
 ### Inference from Scratch
 ~~~
