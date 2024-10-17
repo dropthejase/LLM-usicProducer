@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     # Load model and tokenizer
     device = torch.device(args.device)
-    model = torch.load(args.model_path)
+    model = torch.load(args.model_path, map_location=device)
     model.to(device)
 
     if isinstance(model, MusicTransformer3) or isinstance(model, MusicTransformerXL):
